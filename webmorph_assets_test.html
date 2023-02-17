@@ -208,6 +208,19 @@
 
 			}
 
+			function areEqual( a1, a2){
+
+				console.log(a1)
+				console.log(a2)
+
+
+				for (let index = 0; index < a1.length; index++) {
+					if( a1[index] != a2[index]) return false	
+				}
+
+				return true; 
+			}
+
 			//gui 
 			function charactgersGUI(meshes2) {
 
@@ -234,9 +247,17 @@
 					// let morphAttributes = {};
 					// morphAttributes.position = [];
 					// morphAttributes.position[0] = clone2.geometry.attributes.position;
-					console.log("fl32", clone2.geometry.attributes.position.array);
+
+					const divisor = .001;
+					
+					let pos2 = clone2.geometry.attributes.position.array.map(value => value * divisor);
 					let temp = new THREE.Float32BufferAttribute( clone2.geometry.attributes.position.array, 3 );
+					let temp_normals = new THREE.Float32BufferAttribute( clone2.geometry.attributes.normal.array, 3 );
 					let temp2 = new THREE.Float32BufferAttribute( clone.geometry.attributes.position.array, 3 );
+					
+					// let temp = new THREE.Float32BufferAttribute( clone2.geometry.attributes.position.array.map(value => value * divisor), 3 );
+					// let temp_normals = new THREE.Float32BufferAttribute( clone2.geometry.attributes.normal.array, 3 );
+					// let temp2 = new THREE.Float32BufferAttribute( clone.geometry.attributes.position.array.map(value => value * divisor), 3 );
 
 					//clone1.geometry.morphAttributes.position[120]= temp;
 
@@ -246,61 +267,102 @@
 					clone2.position.x = 0;
 					//scene.add(clone2);
 
-
-					//render();
-					let new_bg = new THREE.BufferGeometry();
-					new_bg = clone2.geometry.clone();
-
-					//geometries
-					//new_bg.attributes.positon = temp;
-					let geom1 = temp;
-					let geaom2= temp2;
-
-					//new_bg.morphAttributes.position[120]= temp2;
-					console.log("New bg", new_bg);
-
 					const material = new THREE.MeshPhongMaterial( {
 						color: 0xff0000,
 						flatShading: true
 					} );
 
-					let mesh = new THREE.Mesh( new_bg, material );
-					mesh.name = "blend mesh";
+
+
+					let morphTargetMesh = new THREE.Mesh(clone.geometry.clone(), material);
+
+					clone2.geometry.attributes.position.array = clone2.geometry.attributes.position.array.map(value => value * divisor);
+
+					// Set buffer geometry as a morph target for the new mesh
+					morphTargetMesh.name = "Blend";
+					morphTargetMesh.morphTargetInfluences = [0, 0];
+					morphTargetMesh.morphTargetDictionary = { 0: "default", 1: "morphTarget" };
+					morphTargetMesh.geometry.morphAttributes.position = [];
+					// morphTargetMesh.geometry.setAttribute(
+					// 	"morphTarget",
+					// 	new THREE.Float32BufferAttribute(clone.geometry.attributes.position.array, 3)
+					// );
+					// morphTargetMesh.geometry.morphTargets = [];
+					// morphTargetMesh.geometry.morphTargets.push( { name: "morph", vertices: temp2 } );
+
+					morphTargetMesh.geometry.morphAttributes.position = [];
+					morphTargetMesh.geometry.morphAttributes.normal = [];
+
+					morphTargetMesh.geometry.morphAttributes.position.push(  temp );
+					morphTargetMesh.geometry.morphAttributes.normal.push(  temp_normals );
+
+					morphTargetMesh.geometry.morphTargetsRelative = true;
+
+					console.log("Morphtarget reult: **", morphTargetMesh);
+
+					let eq = areEqual(clone2.geometry.attributes.position.array, clone2.geometry.attributes.position.array.map(value => value * divisor))
+					console.log("EQUAL ?????", eq );
+
+					// //render();
+					// let new_bg = new THREE.BufferGeometry();
+					// new_bg = clone2.geometry.clone();
+
+					// //geometries
+					// //new_bg.attributes.positon = temp;
+					// let geom1 = temp;
+					// let geaom2= temp2;
+
+					// //new_bg.morphAttributes.position[120]= temp2;
+					// console.log("New bg", new_bg);
+
+					
+
+					// let mesh = new THREE.Mesh( new_bg, material );
+					// mesh.name = "blend mesh";
 					//mesh.position.y -= 160;
 					//mesh.geometry.morphAttributes.position = [];
 					//mesh.geometry.morphAttributes.position = [temp];
 
-					geometry1.morphTargets.push( { name: "morph", vertices: geometry2.vertices } );
-					geometry1.computeVertexNormals();
-					geometry1.computeMorphNormals();
+					//mesh.geometry.morphTargets = [];
+					//mesh.geometry.morphTargets.push( { name: "morph", vertices: temp2 } );
+					// mesh.computeVertexNormals();
+					// mesh.computeMorphNormals();
+					//mesh.geometry.computeVertexNormals();
+                	//mesh.geometry.computeMorphNormals();
 		
-					o.loadGeometry(geometry1);
-					o.material.morphTargets = true;
-					o.material.morphNormals = true;
+					//o.loadGeometry(geometry1);
+					//o.material.morphTargets = true;
+					//o.material.morphNormals = true;
 
 					//mesh.geometry.morphAttributes.position[121] = temp;
 					// let scale_factor = clone.scale.x;
-					mesh.rotation.x += Math.PI / 2;
-					mesh.position.y +=1.7;
-					mesh.scale.x *= .001;
-					mesh.scale.y *= .001;
-					mesh.scale.z *= .001;
-					console.log("testting webmorph ***!!", mesh.geometry);
-					mesh.geometry.computeVertexNormals();
-					mesh.geometry.computeMorphNormals();
+					// mesh.rotation.x += Math.PI / 2;
+					// mesh.position.y +=1.7;
+					// mesh.scale.x *= .001;
+					// mesh.scale.y *= .001;
+					// mesh.scale.z *= .001;
+					
+					morphTargetMesh.rotation.x += Math.PI / 2;
+					morphTargetMesh.position.y +=1.7;
+					morphTargetMesh.scale.x *= .001;
+					morphTargetMesh.scale.y *= .001;
+					morphTargetMesh.scale.z *= .001;
+
+					morphTargetMesh.geometry.computeVertexNormals();
+					// mesh.geometry.computeMorphNormals();
 					//mesh.position = clone.position;
 					//mesh.scale = clone.scale;
-					scene.add(mesh);
+					scene.add(morphTargetMesh);
 					render();
-					console.log("scene", scene);
-					console.log("meshshs",mesh);
 
+					console.log("SCENE IS :", scene);
+					
 				});
 
 				panel.add( params, 'Spherify', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
-					//console.log("influences ::", scene.children[3]);
-					scene.children[5].morphTargetInfluences[120]  = value;
+					console.log("influences ::", scene.children[5]);
+					scene.children[5].morphTargetInfluences[0]  = value;
 					// console.log(value);
 
 				});
