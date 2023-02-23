@@ -51,6 +51,7 @@
 			}
 			let mesh_names = Object.keys(mesh_dict);
 
+
 			init();
 			animate();
 
@@ -220,9 +221,13 @@
 					active_mesh: 0
 				};
 
+				var textures = {
+					Selected_Texture: 'T1',
+					avalible_textures: []
+				};
+
 				const params = {
-					Spherify: 0,
-					Twist: 0,
+					Morph: 0,
 				};
 				
 				//meshes[controls.active_mesh].visible = true;
@@ -241,12 +246,9 @@
 					let material_1 = clone.material;
 					let material_2 = clone2.material;
 
-					clone2.position.x = 0;
+					textures.avalible_textures = [material_1,material_2];
 
-					const material = new THREE.MeshPhongMaterial( {
-						color: 0xff000,
-						flatShading: true
-					} );
+					clone2.position.x = 0;
 
 					let morphTargetMesh = new THREE.Mesh(clone.geometry.clone(), material_1);
 
@@ -263,7 +265,7 @@
 					morphTargetMesh.geometry.morphAttributes.position.push(  temp );
 					morphTargetMesh.geometry.morphAttributes.normal.push(  temp_normals );
 
-					//morphTargetMesh.geometry.morphTargetsRelative = true;
+					//morphTargetMesh.geometry.morphTargetsRelative = true; //mode of blend not working
 					morphTargetMesh.geometry.morphTargets = true;
 					morphTargetMesh.geometry.morphNormals = true;
 
@@ -283,22 +285,20 @@
 					
 				});
 
-				panel.add( params, 'Spherify', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 
-					scene.children[5].morphTargetInfluences[0]  =  value;
-
-					// let scale_val = initial_size * ((1-value)* .5 +.5)///100;
-					// scene.children[5].scale.x = scale_val;
-					// scene.children[5].scale.y = scale_val ;
-					// scene.children[5].scale.z = scale_val ;
-
-					// console.log(value);
+				panel.add(controls, 'Texture', [0,1]).onChange( function ( value ) {
+					//change the textures between the two that we're blending 
+					scene.children[5].material  =  textures.avalible_textures[value];
 
 				});
 
-				panel.onFinishChange(function (value) {
+				panel.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+					//Set the morph amount for the blended mesh
+					scene.children[5].morphTargetInfluences[0]  =  value;
+				});
 
-					
+				panel.onFinishChange(function (value) {
+					// any change on gui parameters	
 				});
 				
 			}
