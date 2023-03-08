@@ -231,9 +231,10 @@
 					
 
                     let nose = clone2.children[8];
-                    let nose2 = clone.children[9]; 
+                    let nose2 = clone.children[8]; 
                     //let nose2 = nose;
                     console.log("Clone two mesh nose******",nose2);
+                    nose2.geometry.computeVertexNormals();
 
 					let temp = new THREE.Float32BufferAttribute( nose2.geometry.attributes.position.array, 3 );
 					let temp_normals = new THREE.Float32BufferAttribute( nose2.geometry.attributes.normal.array, 3 );
