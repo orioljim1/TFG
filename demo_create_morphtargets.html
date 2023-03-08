@@ -70,13 +70,14 @@
 				var values = Object.values(mesh_dict);
 				
 				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/' );
-				loader2.load( 'jen.glb', function ( gltf ) {
+				loader2.load( 'boss_v2.glb', function ( gltf ) {
 					
-					let gltf_mesh = gltf.scene//.children[6].children[1];
-                    console.log("gltf son", gltf_mesh);
+					let gltf_mesh = gltf.scene.children[0].children[3];
+                    console.log("gltf2 son", gltf_mesh);
                     gltf_mesh = gltf.scene
                     gltf_mesh.name = "boss";
 					gltf_mesh.position.x -=.5;
+					//gltf_mesh.geometry.computeVertexNormals();
 					scene.add(gltf_mesh);
 					render();
 					clone = gltf_mesh.clone();
@@ -87,13 +88,14 @@
 				
 				//loader2.setPath( './models/gltf/');
 				//const loader2 = new GLTFLoader().setPath( './models/gltf/' );
-				loader2.load( 'test_jen_nose.glb', function ( gltf ) {
+				loader2.load( 'j2.glb', function ( gltf ) {
 
 					let gltf_mesh = gltf.scene;
+					console.log("jenn", gltf_mesh);
                     gltf_mesh.name = "jennifer";
-					//gltf_mesh.position.x +=.5;
-					//scene.add(gltf_mesh );
-					//render();
+					gltf_mesh.position.x +=.5;
+					scene.add(gltf_mesh );
+					render();
 					clone2 = gltf_mesh.clone();
 				});
 
@@ -204,13 +206,11 @@
                     console.log("Sceneeeeeee:", scene);
 					const divisor = .001;
 
-					//console.log("Clone two mesh child******",nose2);
+					let jen = clone2.children[0];
+                    let boss = clone.children[0]; 
 					
-
-                    let nose = clone2.children[8];
-                    let nose2 = clone.children[8]; 
                     //let nose2 = nose;
-                    console.log("Clone two mesh nose******",nose2);
+                    console.log("Clone two mesh nose******",jen , boss);
                     nose2.geometry.computeVertexNormals();
 
 					let temp = new THREE.Float32BufferAttribute( nose2.geometry.attributes.position.array, 3 );
