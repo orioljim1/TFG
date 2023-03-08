@@ -1,0 +1,9 @@
+Parts to offer blending:
+-eyes
+-chin
+-mouth
+-cheeks
+-jaw
+-cheekbones
+
+(ears not possible with the assets):
