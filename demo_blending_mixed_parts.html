@@ -269,13 +269,22 @@
 				
 			}
 
-            function morph_array(source, goal, indices){
+            function morph_array(source, target, indices){
                 //function to modify a position array 
                 source = source.array;
-                goal = goal.array
+                target = target.array
                 indices= indices.vertices;
-                for (let i = 0; i < source.length; i++) {
-                    if(indices.includes(i)) source[i] = goal[i];       
+
+                for (let i = 0; i < source.length; i+=3) {
+
+					const index = i / 3;
+
+                    if(indices.includes(index)){
+						// Swap the values of the current vertex with the corresponding vertex in target
+						source[i] = target[i] ;
+						source[i + 1] = target[i + 1] +.02;
+						source[i + 2] = target[i + 2] +.01;
+					} 
                 }
                 return source
             }
