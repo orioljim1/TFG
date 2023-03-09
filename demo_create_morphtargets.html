@@ -87,11 +87,7 @@
 					clone = gltf_mesh.clone();
 
 				} );
-					
-				//const loader_face_jack = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
 				
-				//loader2.setPath( './models/gltf/');
-				//const loader2 = new GLTFLoader().setPath( './models/gltf/' );
 				loader2.load( 'jen.glb', function ( gltf ) {
 
 					let gltf_mesh = gltf.scene.children[0].children[0];
@@ -188,7 +184,6 @@
 
 				const panel = new GUI( { width: 310 } );
 
-				//panel.add(select, 'mesh', ['Mesh 1', 'Mesh 2']);
 				var controls = {
 					Morph_meshes: 'Start',
 					active_mesh: 0
@@ -201,13 +196,11 @@
 
 				const params = {
 					Morph: 0,
+					Create_morph: Create_morph
 				};
 				
-				//meshes[controls.active_mesh].visible = true;
-
-				panel.add(controls, 'Character', mesh_names).onChange( function ( value ) {
-
-                    console.log("Sceneeeeeee:", scene);
+				function Create_morph(){
+					console.log("Sceneeeeeee:", scene);
 					const divisor = .001;
 
 					let jen = clone2;
@@ -226,15 +219,9 @@
 					let material_2 = jen.material;
 
 					textures.avalible_textures = [material_1,material_2];
-
-                    //initial_size = nose2.scale.x;
-                    
                                      
-                    //nose2.scale(initial_size, initial_size,initial_size);
 					let morphTargetMesh = new THREE.Mesh(boss.geometry.clone(), material_1);
 					morphTargetMesh.geometry.computeVertexNormals();
-
-					//nose2.geometry.attributes.position.array = nose2.geometry.attributes.position.array.map(value => value * divisor);
 
 					// Set buffer geometry as a morph target for the new mesh
 					morphTargetMesh.name = "Blend";
@@ -251,14 +238,15 @@
 					morphTargetMesh.geometry.morphTargets = true;
 					morphTargetMesh.geometry.morphNormals = true;
 
-
-
-
 					scene.add(morphTargetMesh);
 					render();
-					
-				});
+				}
 
+				// panel.add(controls, 'Character', mesh_names).onChange( function ( value ) {
+				// 	//unused					
+				// });
+
+				panel.add( params, 'Create_morph' ).name( 'Create morph character');
 
 				panel.add(controls, 'Texture', [0,1]).onChange( function ( value ) {
 					//change the textures between the two that we're blending 
@@ -268,21 +256,8 @@
 				});
 
 				panel.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
-					//Set the morph amount for the blended mesh
-					// scene.children[5].morphTargetInfluences[0]  =  value;
-                    // scene.children[5].morphTargetInfluences[1]  =  value;
-                    // scene.children[5].scale.x= initial_size /3;
-                    // scene.children[5].scale.y= initial_size /3;
-                    // scene.children[5].scale.z= initial_size /3;
+					
                     scene.children[5].morphTargetInfluences[0]  =  value;
-                    //scene.children[3].children[8].morphTargetInfluences[1]  =  value;
-                    // scene.children[3].children[8].scale.x= initial_size * mapValueToRange(value);
-                    // scene.children[3].children[8].scale.y= initial_size * mapValueToRange(value);
-                    // scene.children[3].children[8].scale.z= initial_size * mapValueToRange(value);
-                    
-
-                                        
-                    //else scene.children[5].scale = initial_size;
 				});
 
 				panel.onFinishChange(function (value) {
@@ -290,13 +265,6 @@
 				});
 				
 			}
-
-            function mapValueToRange(value) {
-                // const output = (1 - value) * 0.25 + 0.75;
-                // return output;
-                const output = (1 - value) * 0.5 + 0.5;
-                return output;
-            }
 
 		</script>
 
