@@ -20,8 +20,8 @@
 		</script>
 		<script src="https://dagrejs.github.io/project/graphlib/latest/graphlib.js"></script>
 
+		<script type="module" src="./scripts/js/morph_target_creator.js"></script>
 		
-
 		<script type="module">
 
 			import * as THREE from 'three';
@@ -33,6 +33,10 @@
 
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+
+
+			import nose_vertices from './scripts/js/Nose_boss.json' assert { type: "json" };
+
 
 
 			let container, stats, clock, controls, material;
@@ -72,9 +76,9 @@
 				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/' );
 				loader2.load( 'boss_v2.glb', function ( gltf ) {
 					
-					let gltf_mesh = gltf.scene.children[0].children[3];
-                    console.log("gltf2 son", gltf_mesh);
-                    gltf_mesh = gltf.scene
+					let gltf_mesh = gltf.scene.children[0].children[0];
+                    console.log("boss", gltf_mesh);
+                    //gltf_mesh = gltf.scene
                     gltf_mesh.name = "boss";
 					gltf_mesh.position.x -=.5;
 					//gltf_mesh.geometry.computeVertexNormals();
@@ -88,9 +92,9 @@
 				
 				//loader2.setPath( './models/gltf/');
 				//const loader2 = new GLTFLoader().setPath( './models/gltf/' );
-				loader2.load( 'j2.glb', function ( gltf ) {
+				loader2.load( 'jen.glb', function ( gltf ) {
 
-					let gltf_mesh = gltf.scene;
+					let gltf_mesh = gltf.scene.children[0].children[0];
 					console.log("jenn", gltf_mesh);
                     gltf_mesh.name = "jennifer";
 					gltf_mesh.position.x +=.5;
@@ -206,26 +210,28 @@
                     console.log("Sceneeeeeee:", scene);
 					const divisor = .001;
 
-					let jen = clone2.children[0];
-                    let boss = clone.children[0]; 
+					let jen = clone2;
+                    let boss = clone; 
 					
                     //let nose2 = nose;
                     console.log("Clone two mesh nose******",jen , boss);
-                    nose2.geometry.computeVertexNormals();
+                    boss.geometry.computeVertexNormals();
 
-					let temp = new THREE.Float32BufferAttribute( nose2.geometry.attributes.position.array, 3 );
-					let temp_normals = new THREE.Float32BufferAttribute( nose2.geometry.attributes.normal.array, 3 );
-					let temp2 = new THREE.Float32BufferAttribute( nose.geometry.attributes.position.array, 3 );
-					let material_1 = nose.material;
-					let material_2 = nose2.material;
+					let temp = new THREE.Float32BufferAttribute( boss.geometry.attributes.position.array, 3 );
+					let temp_normals = new THREE.Float32BufferAttribute( boss.geometry.attributes.normal.array, 3 );
+					let temp2 = new THREE.Float32BufferAttribute( jen.geometry.attributes.position.array, 3 );
+					let norm_morph = new THREE.Float32BufferAttribute( jen.geometry.attributes.normal.array, 3 );
+
+					let material_1 = boss.material;
+					let material_2 = jen.material;
 
 					textures.avalible_textures = [material_1,material_2];
 
-                    initial_size = nose2.scale.x;
+                    //initial_size = nose2.scale.x;
                     
                                      
                     //nose2.scale(initial_size, initial_size,initial_size);
-					let morphTargetMesh = new THREE.Mesh(nose.geometry.clone(), material_1);
+					let morphTargetMesh = new THREE.Mesh(boss.geometry.clone(), material_1);
 					morphTargetMesh.geometry.computeVertexNormals();
 
 					//nose2.geometry.attributes.position.array = nose2.geometry.attributes.position.array.map(value => value * divisor);
@@ -238,39 +244,17 @@
 					morphTargetMesh.geometry.morphAttributes.position = [];
 					morphTargetMesh.geometry.morphAttributes.normal = [];
 
-					morphTargetMesh.geometry.morphAttributes.position.push(  temp );
-					morphTargetMesh.geometry.morphAttributes.normal.push(  temp_normals );
+					morphTargetMesh.geometry.morphAttributes.position.push(  temp2 );
+					morphTargetMesh.geometry.morphAttributes.normal.push(  norm_morph );
 
-                    morphTargetMesh.geometry.morphAttributes.position.push(  temp );
-					morphTargetMesh.geometry.morphAttributes.normal.push(  temp_normals );
-
-					morphTargetMesh.geometry.morphTargetsRelative = false; //mode of blend not working
+    				morphTargetMesh.geometry.morphTargetsRelative = false; //mode of blend not working
 					morphTargetMesh.geometry.morphTargets = true;
 					morphTargetMesh.geometry.morphNormals = true;
 
-					//let eq = areEqual(nose2.geometry.attributes.position.array, nose2.geometry.attributes.position.array.map(value => value * divisor))
-			
-					//morphTargetMesh.rotation.x += Math.PI / 2;
-                    // morphTargetMesh.position.y +=1.685;
-					// morphTargetMesh.position.x -=.5;
-                    // morphTargetMesh.position.z +=.1001;
-                    //morphTargetMesh.position.y +=1.68;
-					//morphTargetMesh.position.x -=.5;
-                    //morphTargetMesh.position.z +=.1001;
 
-					// morphTargetMesh.scale.x *= divisor;
-					// morphTargetMesh.scale.y *= divisor;
-					// morphTargetMesh.scale.z *= divisor;
 
-                    morphTargetMesh.position.x = nose.position.x;
-                    morphTargetMesh.position.y = nose.position.y;
-                    morphTargetMesh.position.z = nose.position.z;
 
-					//initial_size = morphTargetMesh.scale.x;
-
-                    clone2.children[8] = morphTargetMesh;
-                    
-					scene.add(clone2);
+					scene.add(morphTargetMesh);
 					render();
 					
 				});
@@ -278,6 +262,7 @@
 
 				panel.add(controls, 'Texture', [0,1]).onChange( function ( value ) {
 					//change the textures between the two that we're blending 
+					console.log(scene);
 					scene.children[5].material  =  textures.avalible_textures[value];
 
 				});
@@ -289,8 +274,7 @@
                     // scene.children[5].scale.x= initial_size /3;
                     // scene.children[5].scale.y= initial_size /3;
                     // scene.children[5].scale.z= initial_size /3;
-                    console.log(scene);
-                    scene.children[3].children[8].morphTargetInfluences[0]  =  value;
+                    scene.children[5].morphTargetInfluences[0]  =  value;
                     //scene.children[3].children[8].morphTargetInfluences[1]  =  value;
                     // scene.children[3].children[8].scale.x= initial_size * mapValueToRange(value);
                     // scene.children[3].children[8].scale.y= initial_size * mapValueToRange(value);
