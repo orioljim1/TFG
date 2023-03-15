@@ -75,37 +75,21 @@
 
 				var values = Object.values(mesh_dict);
 				
-				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/' );
-				loader2.load( 'boss_v2.glb', function ( gltf ) {
+				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/' );
+				loader2.load( '1.glb', function ( gltf ) {
 					
-					let gltf_mesh = gltf.scene;
+					let gltf_mesh = gltf.scene.children[0].children[0]
                     console.log("boss", gltf_mesh);
                     //gltf_mesh = gltf.scene
-                    gltf_mesh.name = "boss";
-					gltf_mesh.position.x -=.5;
+                    //gltf_mesh.name = "jack";
+					//gltf_mesh.position.x -=.5;
 					//gltf_mesh.geometry.computeVertexNormals();
 					scene.add(gltf_mesh);
 					render();
 					clone = gltf_mesh
 
 				} );
-					
-				//const loader_face_jack = new GLTFLoader().setPath( 'models/gltf/DamagedHelmet/glTF/' );
-				
-				//loader2.setPath( './models/gltf/');
-				//const loader2 = new GLTFLoader().setPath( './models/gltf/' );
-				loader2.load( 'jen.glb', function ( gltf ) {
-
-					let gltf_mesh = gltf.scene.children[0].children[0];
-					console.log("jenn", gltf_mesh);
-                    gltf_mesh.name = "jennifer";
-					gltf_mesh.position.x +=.5;
-					scene.add(gltf_mesh );
-					render();
-					clone2 = gltf_mesh.clone();
-				});
-
-					
+								
 				const gridHelper = new THREE.GridHelper( 10, 20, 0x888888, 0x444444 );
 				scene.add( gridHelper );
 

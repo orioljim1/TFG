@@ -75,8 +75,7 @@
 				loader2.load( 'e2.glb', function ( gltf ) {
 					
 					let gltf_mesh = gltf.scene.children[0].children[0].children[0];
-                    console.log("e2.glb", gltf_mesh.geometry.attributes);
-                    //gltf_mesh = gltf.scene
+                    console.log("boss.glb", gltf_mesh);
                     gltf_mesh.name = "boss";
 					gltf_mesh.position.x -=.5;
 					gltf_mesh.geometry.computeVertexNormals();
@@ -89,13 +88,35 @@
 				loader2.load( 'jen.gltf', function ( gltf ) {
 
 					let gltf_mesh = gltf.scene.children[0].children[0].children[0];
-					console.log("jenn", gltf_mesh.geometry.attributes);
+					console.log("jenn", gltf_mesh);
                     gltf_mesh.name = "jennifer";
 					gltf_mesh.position.x +=.5;
 					scene.add(gltf_mesh );
 					render();
 					clone2 = gltf_mesh.clone();
 				});
+
+				loader2.load( 'jack_bm.glb', function ( gltf ) {
+					
+					let gltf_mesh = gltf.scene.children[0]
+					//let gltf_mesh = gltf.scene.children[0].children[0];
+
+					//gltf_mesh.geometry.attributes.position.array = gltf_mesh.geometry.attributes.position.array.map(value => value * 0.01);
+                    //gltf_mesh.name = "jack";
+					console.log("eden.glb", gltf_mesh);
+
+					gltf_mesh.position.x -=1;
+					// gltf_mesh.scale.x *= .1;
+					// gltf_mesh.scale.y *= .1;
+					// gltf_mesh.scale.z *= .1;
+					//gltf_mesh.position.y -=.1;
+					//gltf_mesh.geometry.computeVertexNormals();
+					scene.add(gltf_mesh);
+					render();
+					clone= gltf_mesh.clone();
+
+				} );
+				
 
 					
 				const gridHelper = new THREE.GridHelper( 10, 20, 0x888888, 0x444444 );
@@ -218,6 +239,12 @@
 					let morphTargetMesh = new THREE.Mesh(boss.geometry.clone(), material_1);
 					morphTargetMesh.geometry.computeVertexNormals();
 
+					// morphTargetMesh.position.x -=2;
+					// morphTargetMesh.scale.x = 0.01;
+					// morphTargetMesh.scale.y= 0.01;
+					// morphTargetMesh.scale.z= 0.01;
+					// morphTargetMesh.position.y -=.1;
+
 					// Set buffer geometry as a morph target for the new mesh
 					morphTargetMesh.name = "Blend";
 					morphTargetMesh.morphTargetInfluences = [0, 0];
@@ -229,7 +256,7 @@
                     let mixed_p = morph_array(source_p,target_p, nose_vertices);
                     let mixed_n = morph_array(source_n, target_n, nose_vertices);
 
-                    console.log("mixess", mixed_p, mixed_n);
+                    console.log("mixess", source_p, target_p);
 
                     let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
 					let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
@@ -240,6 +267,8 @@
     				morphTargetMesh.geometry.morphTargetsRelative = false; //mode of blend not working
 					morphTargetMesh.geometry.morphTargets = true;
 					morphTargetMesh.geometry.morphNormals = true;
+
+					
 
 					scene.add(morphTargetMesh);
 					render();
@@ -254,13 +283,13 @@
 				panel.add(controls, 'Texture', [0,1]).onChange( function ( value ) {
 					//change the textures between the two that we're blending 
 					console.log(scene);
-					scene.children[5].material  =  textures.avalible_textures[value];
+					scene.children[6].material  =  textures.avalible_textures[value];
 
 				});
 
 				panel.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 					
-                    scene.children[5].morphTargetInfluences[0]  =  value;
+                    scene.children[6].morphTargetInfluences[0]  =  value;
 				});
 
 				panel.onFinishChange(function (value) {
@@ -275,19 +304,49 @@
                 target = target.array
                 indices= indices.vertices;
 
+				let d = calculate_distances(source,target,indices);
+				
                 for (let i = 0; i < source.length; i+=3) {
 
 					const index = i / 3;
 
                     if(indices.includes(index)){
-						// Swap the values of the current vertex with the corresponding vertex in target
+						// Swap the values of the current vertex with the corresponding vertex in target					
 						source[i] = target[i] ;
-						source[i + 1] = target[i + 1] +.02;
-						source[i + 2] = target[i + 2] +.01;
+						source[i + 1] = target[i + 1] + d.x// +.027;
+						source[i + 2] = target[i + 2] +d.y -0.006 //+.01;
+					
 					} 
                 }
+				
                 return source
             }
+
+
+			function calculate_distances(source, target, indices){
+
+				let dx=0 ;
+				let dy = 0;
+				let dz = 0;
+				let i = 0;
+
+				for (let i = 0; i < source.length; i+=3) {
+
+					const index = i / 3;
+
+					if(indices.includes(index)){
+						i++;
+						// Swap the values of the current vertex with the corresponding vertex in target
+						dx += source [i] - target[i];
+						dy += source[i+1] - target[i+1];
+						dz += source[i+2] - target[i+2];
+									
+					} 
+				}
+				console.log("distances", dx, dy , dz);
+
+				return {x:dx, y:dy, z:dz}
+			}
 
 		</script>
 
