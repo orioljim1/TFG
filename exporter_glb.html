@@ -75,15 +75,12 @@
 
 				var values = Object.values(mesh_dict);
 				
-				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/' );
-				loader2.load( '1.glb', function ( gltf ) {
+				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/final_meshes/' );
+				loader2.load( 'cleo.glb', function ( gltf ) {
 					
-					let gltf_mesh = gltf.scene.children[0].children[0]
+					let gltf_mesh = gltf.scene;
                     console.log("boss", gltf_mesh);
-                    //gltf_mesh = gltf.scene
-                    //gltf_mesh.name = "jack";
-					//gltf_mesh.position.x -=.5;
-					//gltf_mesh.geometry.computeVertexNormals();
+                    gltf_mesh.name = "Cleo";
 					scene.add(gltf_mesh);
 					render();
 					clone = gltf_mesh
@@ -173,8 +170,6 @@
 			function charactgersGUI(meshes2) {
 
 				const panel = new GUI( { width: 310 } );
-
-				//panel.add(select, 'mesh', ['Mesh 1', 'Mesh 2']);
 				var controls = {
 					Morph_meshes: 'Start',
 					active_mesh: 0
@@ -199,64 +194,7 @@
                     exportGLTF(clone);
                 }
 				
-				//meshes[controls.active_mesh].visible = true;
-
-				panel.add(controls, 'Character', mesh_names).onChange( function ( value ) {
-
-                    console.log("Sceneeeeeee:", scene);
-					const divisor = .001;
-
-					let jen = clone2;
-                    let boss = clone; 
-					
-                    //let nose2 = nose;
-                    console.log("Clone two mesh nose******",jen , boss);
-                    boss.geometry.computeVertexNormals();
-
-					let temp = new THREE.Float32BufferAttribute( boss.geometry.attributes.position.array, 3 );
-					let temp_normals = new THREE.Float32BufferAttribute( boss.geometry.attributes.normal.array, 3 );
-					let temp2 = new THREE.Float32BufferAttribute( jen.geometry.attributes.position.array, 3 );
-					let norm_morph = new THREE.Float32BufferAttribute( jen.geometry.attributes.normal.array, 3 );
-
-					let material_1 = boss.material;
-					let material_2 = jen.material;
-
-					textures.avalible_textures = [material_1,material_2];
-
-                    //initial_size = nose2.scale.x;
-                    
-                                     
-                    //nose2.scale(initial_size, initial_size,initial_size);
-					let morphTargetMesh = new THREE.Mesh(boss.geometry.clone(), material_1);
-					morphTargetMesh.geometry.computeVertexNormals();
-
-					//nose2.geometry.attributes.position.array = nose2.geometry.attributes.position.array.map(value => value * divisor);
-
-					// Set buffer geometry as a morph target for the new mesh
-					morphTargetMesh.name = "Blend";
-					morphTargetMesh.morphTargetInfluences = [0, 0];
-					morphTargetMesh.morphTargetDictionary = { 0: "default", 1: "morphTarget" };
-					morphTargetMesh.geometry.morphAttributes.position = [];
-					morphTargetMesh.geometry.morphAttributes.position = [];
-					morphTargetMesh.geometry.morphAttributes.normal = [];
-
-					morphTargetMesh.geometry.morphAttributes.position.push(  temp2 );
-					morphTargetMesh.geometry.morphAttributes.normal.push(  norm_morph );
-
-    				morphTargetMesh.geometry.morphTargetsRelative = false; //mode of blend not working
-					morphTargetMesh.geometry.morphTargets = true;
-					morphTargetMesh.geometry.morphNormals = true;
-
-
-
-
-					scene.add(morphTargetMesh);
-					render();
-					
-				});
-
-
-                panel.add( params, 'export_glb' ).name( 'Export GLB' );
+				panel.add( params, 'export_glb' ).name( 'Export GLB' );
 
 				panel.onFinishChange(function (value) {
 					// any change on gui parameters	

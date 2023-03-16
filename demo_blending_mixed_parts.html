@@ -44,13 +44,6 @@
 
 			//meshses dictionary 
 
-			let mesh_dict = {
-				"Test": {file: "./tfg/a/uploads_files_3895009_BOSS.dae"},
-				"T2": {file: "./tfg/a/uploads_files_3895009_CLEOPATRA.dae"}
-			}
-			let mesh_names = Object.keys(mesh_dict);
-
-
 			init();
 			animate();
 
@@ -68,10 +61,8 @@
 				// collada
 
 				const loader = new ColladaLoader();
-
-				var values = Object.values(mesh_dict);
-				
-				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/' );
+		
+				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
 				loader2.load( 'e2.glb', function ( gltf ) {
 					
 					let gltf_mesh = gltf.scene.children[0].children[0].children[0];
@@ -116,6 +107,18 @@
 					clone= gltf_mesh.clone();
 
 				} );
+
+				loader2.load( 'cleo.glb', function ( gltf ) {
+
+
+					let gltf_mesh = gltf.scene.children[0];
+					let son_idx = gltf_mesh.children.findIndex(obj => obj.name === "Head");
+					gltf_mesh = gltf_mesh.children[son_idx];
+					gltf_mesh.position.x +=1;
+					scene.add(gltf_mesh );
+					render();
+					clone2 = gltf_mesh.clone();
+				});
 				
 
 					
@@ -289,7 +292,8 @@
 
 				panel.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 					
-                    scene.children[6].morphTargetInfluences[0]  =  value;
+					let morph_idx = scene.children.findIndex(obj => obj.name === "Blend");
+                    scene.children[morph_idx].morphTargetInfluences[0]  =  value;
 				});
 
 				panel.onFinishChange(function (value) {
