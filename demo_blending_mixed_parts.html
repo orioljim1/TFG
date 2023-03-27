@@ -1,9 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
+	<head>
+		
+		<link rel="stylesheet" href="main.css">
+	  </head>
 	
 	<body>
 
-		<div id="container"></div>
+		<div id="loading-screen" >
+			<div class="spinner"></div>
+			<h1>Loading...</h1>
+		</div>
+		  
+		  
+		<div id="container" class="hidden"></div>
 		
 
 		<!-- Import maps polyfill -->
@@ -34,20 +44,29 @@
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
-
 			import nose_vertices from './scripts/js/nose_test_3.json' assert { type: "json" };
+
+			let Models_dict= {
+				"Boss": 'boss.glb',
+				"Jen": "jen.glb",
+				"Cleo": "cleo.glb",
+				"Jack": "jack_bm.glb"
+			}
 
 			let container, stats, clock, controls, material;
 			let camera, scene, renderer, mixer,active_mesh;
 			let meshes = []; // mesh variables
 			let clone,clone2, initial_size;
-
-			//meshses dictionary 
-
-			init();
+			let selection_state,base_selection, morph_selection; // variables to manage the selection processs;
+			
+			//App flow
+			await init();
+			setTimeout(swap_visibility, 2000);
+			selection_state = "base";
+			
 			animate();
 
-			function init() {
+			async function init() {
 
 				container = document.getElementById( 'container' );
 
@@ -57,75 +76,61 @@
 				scene = new THREE.Scene();
 
 				clock = new THREE.Clock();
-
-				// collada
-
-				const loader = new ColladaLoader();
 		
-				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
-				loader2.load( 'e2.glb', function ( gltf ) {
-					
-					let gltf_mesh = gltf.scene.children[0].children[0].children[0];
-                    console.log("boss.glb", gltf_mesh);
-                    gltf_mesh.name = "boss";
-					gltf_mesh.position.x -=.5;
-					gltf_mesh.geometry.computeVertexNormals();
-					scene.add(gltf_mesh);
-					render();
-					clone = gltf_mesh.clone();
-
-				} );
-				
-				loader2.load( 'jen.gltf', function ( gltf ) {
-
-					let gltf_mesh = gltf.scene.children[0].children[0].children[0];
-					console.log("jenn", gltf_mesh);
-                    gltf_mesh.name = "jennifer";
-					gltf_mesh.position.x +=.5;
-					scene.add(gltf_mesh );
-					render();
-					clone2 = gltf_mesh.clone();
-				});
-
-				loader2.load( 'jack_bm.glb', function ( gltf ) {
-					
-					let gltf_mesh = gltf.scene.children[0]
-					//let gltf_mesh = gltf.scene.children[0].children[0];
-
-					//gltf_mesh.geometry.attributes.position.array = gltf_mesh.geometry.attributes.position.array.map(value => value * 0.01);
-                    //gltf_mesh.name = "jack";
-					console.log("eden.glb", gltf_mesh);
-
-					gltf_mesh.position.x -=1;
-					// gltf_mesh.scale.x *= .1;
-					// gltf_mesh.scale.y *= .1;
-					// gltf_mesh.scale.z *= .1;
-					//gltf_mesh.position.y -=.1;
-					//gltf_mesh.geometry.computeVertexNormals();
-					scene.add(gltf_mesh);
-					render();
-					clone= gltf_mesh.clone();
-
-				} );
-
-				loader2.load( 'cleo.glb', function ( gltf ) {
-
-
-					let gltf_mesh = gltf.scene.children[0];
-					let son_idx = gltf_mesh.children.findIndex(obj => obj.name === "Head");
-					gltf_mesh = gltf_mesh.children[son_idx];
-					gltf_mesh.position.x +=1;
-					scene.add(gltf_mesh );
-					render();
-					clone2 = gltf_mesh.clone();
-				});
 				
 
+				// loader2.load( 'boss.glb', function ( gltf ) {
 					
-				const gridHelper = new THREE.GridHelper( 10, 20, 0x888888, 0x444444 );
+				// 	let gltf_mesh = findHead(gltf.scene);
+				// 	//let gltf_mesh = gltf.scene.children[0].children[0].children[0];
+                //     gltf_mesh.name = "boss";
+				// 	gltf_mesh.position.x -=.5;
+				// 	gltf_mesh.geometry.computeVertexNormals();
+				// 	scene.add(gltf_mesh);
+				// 	render();
+				// 	clone = gltf_mesh.clone();
+
+				// } );
+				
+				// loader2.load( 'jen.glb', function ( gltf ) {
+
+				// 	let gltf_mesh = findHead(gltf.scene);
+				// 	//let gltf_mesh = gltf.scene.children[0].children[0].children[0];
+                //     gltf_mesh.name = "jennifer";
+				// 	gltf_mesh.position.x +=.5;
+				// 	scene.add(gltf_mesh );
+				// 	render();
+				// 	clone2 = gltf_mesh.clone();
+				// });
+
+				// loader2.load( 'jack_bm.glb', function ( gltf ) {
+
+				// 	let gltf_mesh = findHead(gltf.scene);
+				// 	//let gltf_mesh = gltf.scene.children[0]
+
+				// 	gltf_mesh.position.x -=1;
+				// 	scene.add(gltf_mesh);
+				// 	render();
+				// 	clone= gltf_mesh.clone();
+
+				// } );
+
+				// loader2.load( 'cleo.glb', function ( gltf ) {
+
+
+				// 	// let gltf_mesh = gltf.scene.children[0];
+				// 	// let son_idx = gltf_mesh.children.findIndex(obj => obj.name === "Head");
+				// 	let gltf_mesh = findHead(gltf.scene);
+
+				// 	//gltf_mesh = gltf_mesh.children[son_idx];
+				// 	gltf_mesh.position.x +=1;
+				// 	scene.add(gltf_mesh );
+				// 	render();
+				// 	//clone2 = gltf_mesh.clone();
+				// });
+				
+				const gridHelper = new THREE.GridHelper( 10, 20, 0xffffff, 0x444444 );
 				scene.add( gridHelper );
-
-				
 
 				const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
 				scene.add( ambientLight );
@@ -139,6 +144,7 @@
 				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
+				renderer.setClearColor(0xbfe3dd);
 
 				controls = new OrbitControls( camera, renderer.domElement );
 				controls.screenSpacePanning = true;
@@ -152,8 +158,18 @@
 
 				window.addEventListener( 'resize', onWindowResize );
 
-				charactgersGUI(null);
+				await importAssets(Models_dict);
+				render();
+				//charactgersGUI(null);
+			
+			}
 
+			function swap_visibility(){
+				var c = document.getElementById('container');
+				c.classList.toggle('hidden');
+				c = document.getElementById('loading-screen');
+				c.classList.toggle('hidden')
+				charactgersGUI(null);
 			}
 
 			function onWindowResize() {
@@ -162,7 +178,6 @@
 				camera.updateProjectionMatrix();
 
 				renderer.setSize( window.innerWidth, window.innerHeight );
-
 			}
 
 			function animate() {
@@ -229,6 +244,10 @@
                     //let nose2 = nose;
                     boss.geometry.computeVertexNormals();
 
+					console.log("j", jen);
+
+					console.log("c2", boss);
+
 					let source_p = new THREE.Float32BufferAttribute( boss.geometry.attributes.position.array, 3 );
 					let source_n = new THREE.Float32BufferAttribute( boss.geometry.attributes.normal.array, 3 );
 					let target_p = new THREE.Float32BufferAttribute( jen.geometry.attributes.position.array, 3 );
@@ -256,8 +275,8 @@
 					morphTargetMesh.geometry.morphAttributes.position = [];
 					morphTargetMesh.geometry.morphAttributes.normal = [];
 
-                    let mixed_p = morph_array(source_p,target_p, nose_vertices);
-                    let mixed_n = morph_array(source_n, target_n, nose_vertices);
+                    let mixed_p = morph_array_2(source_p,target_p, nose_vertices);
+                    let mixed_n = morph_array_2(source_n, target_n, nose_vertices);
 
                     console.log("mixess", source_p, target_p);
 
@@ -315,7 +334,8 @@
 					const index = i / 3;
 
                     if(indices.includes(index)){
-						// Swap the values of the current vertex with the corresponding vertex in target					
+						// Swap the values of the current vertex with the corresponding vertex in target
+										
 						source[i] = target[i] ;
 						source[i + 1] = target[i + 1] + d.x// +.027;
 						source[i + 2] = target[i + 2] +d.y -0.006 //+.01;
@@ -327,12 +347,39 @@
             }
 
 
+			function morph_array_2(source, target, indices){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
+                //function to modify a position array 
+                source = source.array;
+                target = target.array
+                indices= indices.vertices;
+
+				let d = calculate_distances(source,target,indices);
+				
+                for (let i = 0; i < indices.length; i++) {
+
+					const index = indices[i] *3;
+											
+					source[index] = target[index] ;
+					source[index + 1] = target[index + 1] + d.x// +.027;
+					source[index + 2] = target[index + 2] +d.y -0.006 //+.01;
+					
+					
+                }
+				
+                return source
+            }
+
+
+
 			function calculate_distances(source, target, indices){
 
 				let dx=0 ;
 				let dy = 0;
 				let dz = 0;
 				let i = 0;
+				let a= []; 
+				let b= [];
+
 
 				for (let i = 0; i < source.length; i+=3) {
 
@@ -341,15 +388,129 @@
 					if(indices.includes(index)){
 						i++;
 						// Swap the values of the current vertex with the corresponding vertex in target
+						a.push(i);
+						console.log("******************");
 						dx += source [i] - target[i];
 						dy += source[i+1] - target[i+1];
 						dz += source[i+2] - target[i+2];
 									
 					} 
 				}
-				console.log("distances", dx, dy , dz);
+
+
+				// for (let i = 0; i < indices.length; i++) {
+				// 	a.push(indices[i]);
+
+				// 	const index = indices[i] *3;
+											
+				// 	dx += source [index] - target[index];
+				// 	dy += source[index+1] - target[index+1];
+				// 	dz += source[index+2] - target[index+2];
+
+
+				// }
+
+				
+				console.log("distances", dx/indices.length, dy/indices.length , dz/indices.length);
+				console.log("arr", a );
 
 				return {x:dx, y:dy, z:dz}
+			}
+		
+			// Define a variable to hold the currently selected object
+			let selectedObject = null;
+
+			// Add event listener for click event on renderer's DOM element
+			renderer.domElement.addEventListener( 'click', function ( event ) {
+				
+				if(selection_state != "finished"){
+					// Calculate mouse position in normalized device coordinates
+					const mouse = new THREE.Vector2(); 
+					mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+					mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+					// Create a raycaster from the camera to the clicked position
+					const raycaster = new THREE.Raycaster();
+					raycaster.setFromCamera( mouse, camera );
+
+					// Check for intersections with objects in the scene
+					const intersects = raycaster.intersectObjects( scene.children, true );
+
+					// If there are intersections, select the first one
+					if ( intersects.length > 0 && intersects[0].object.type != 'GridHelper' ) {
+
+						// Deselect the previously selected object (if any)
+						if ( selectedObject) {
+							
+							// Restore the original material
+							selectedObject.material = material;
+							selectedObject = null;
+						}
+
+						// Select the new object
+						selectedObject = intersects[0].object;
+						// Store the original material to restore it later
+						material = selectedObject.material;
+						// Set a new material to indicate selection (e.g. red color)
+						//selectedObject.material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+
+						selection_scheduler(selectedObject);
+
+					}
+				}
+			} );
+
+			function findHead(scene){
+
+				while( scene.name != "Head"  ){
+					
+					let son_idx = scene.children.findIndex(obj => obj.name === "Head");
+					// if  () scene= scene.children[son_idx]
+					// else scene= scene.children[0]
+					scene = son_idx !=-1 ? scene.children[son_idx] : scene.children[0];					
+				}
+				return scene;
+
+			}
+
+			async function importAssets(routes){
+				//import assets
+				const values = Object.values(routes);
+				const loader_glb = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
+
+				for (let i = 0; i < values.length; i++) {
+					
+					let route = values[i];
+					loader_glb.load( route, function ( gltf ) {
+					
+					let gltf_mesh = findHead(gltf.scene);
+					//let gltf_mesh = gltf.scene.children[0].children[0].children[0];
+                    gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
+					if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
+					scene.add(gltf_mesh);
+					//render();
+					//clone = gltf_mesh.clone();
+					} );
+				}
+
+			}
+
+			function selection_scheduler(sel_obj){
+
+				if(selection_state == "base"){
+					console.log(sel_obj);
+					
+					clone = sel_obj.clone();
+					selection_state = "blend"
+					scene.remove(sel_obj);
+
+				}else if ( selection_state == "blend"){
+
+					clone2 = sel_obj.clone();
+					scene.remove(sel_obj);
+					selection_state = "hold";
+				}
+
 			}
 
 		</script>

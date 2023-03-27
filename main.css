@@ -68,7 +68,7 @@ a, button, input, select {
 	align-items: center;
 	justify-content: center;
 	flex-direction: column;
-	background: rgba(0,0,0,0.7);
+	background:  #bfe3dd;
 }
 
 	#overlay button {
@@ -89,3 +89,42 @@ a, button, input, select {
 	margin-top: 20px;
 	padding: 10px;
 }
+
+
+
+.hidden {
+	display: none !important;
+}
+#loading-screen {
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-color: #fff;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+  }
+  
+  .spinner {
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	border: 3px solid #000;
+	border-top-color: #999;
+	animation: spinner 1s linear infinite;
+  }
+  
+  @keyframes spinner {
+	from { transform: rotate(0deg); }
+	to { transform: rotate(360deg); }
+  }
+  
+  #loading-screen h1 {
+	margin-left: 20px;
+	font-size: 24px;
+	font-weight: bold;
+	color: #000;
+  }
+  
