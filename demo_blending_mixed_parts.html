@@ -15,7 +15,6 @@
 		  
 		<div id="container" class="hidden"></div>
 		
-
 		<!-- Import maps polyfill -->
 		<!-- Remove this when import maps will be widely supported -->
 		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
@@ -44,7 +43,9 @@
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
+			//vertex import for face parts
 			import nose_vertices from './scripts/js/nose_test_3.json' assert { type: "json" };
+			import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
 
 			let Models_dict= {
 				"Boss": 'boss.glb',
@@ -61,7 +62,7 @@
 			
 			//App flow
 			await init();
-			setTimeout(swap_visibility, 2000);
+			setTimeout(swap_visibility, 2000); //2s as when models are imported depending on the pc it takes a little bit longer for them to be displayed on the screen
 			selection_state = "base";
 			
 			animate();
@@ -76,59 +77,7 @@
 				scene = new THREE.Scene();
 
 				clock = new THREE.Clock();
-		
-				
-
-				// loader2.load( 'boss.glb', function ( gltf ) {
 					
-				// 	let gltf_mesh = findHead(gltf.scene);
-				// 	//let gltf_mesh = gltf.scene.children[0].children[0].children[0];
-                //     gltf_mesh.name = "boss";
-				// 	gltf_mesh.position.x -=.5;
-				// 	gltf_mesh.geometry.computeVertexNormals();
-				// 	scene.add(gltf_mesh);
-				// 	render();
-				// 	clone = gltf_mesh.clone();
-
-				// } );
-				
-				// loader2.load( 'jen.glb', function ( gltf ) {
-
-				// 	let gltf_mesh = findHead(gltf.scene);
-				// 	//let gltf_mesh = gltf.scene.children[0].children[0].children[0];
-                //     gltf_mesh.name = "jennifer";
-				// 	gltf_mesh.position.x +=.5;
-				// 	scene.add(gltf_mesh );
-				// 	render();
-				// 	clone2 = gltf_mesh.clone();
-				// });
-
-				// loader2.load( 'jack_bm.glb', function ( gltf ) {
-
-				// 	let gltf_mesh = findHead(gltf.scene);
-				// 	//let gltf_mesh = gltf.scene.children[0]
-
-				// 	gltf_mesh.position.x -=1;
-				// 	scene.add(gltf_mesh);
-				// 	render();
-				// 	clone= gltf_mesh.clone();
-
-				// } );
-
-				// loader2.load( 'cleo.glb', function ( gltf ) {
-
-
-				// 	// let gltf_mesh = gltf.scene.children[0];
-				// 	// let son_idx = gltf_mesh.children.findIndex(obj => obj.name === "Head");
-				// 	let gltf_mesh = findHead(gltf.scene);
-
-				// 	//gltf_mesh = gltf_mesh.children[son_idx];
-				// 	gltf_mesh.position.x +=1;
-				// 	scene.add(gltf_mesh );
-				// 	render();
-				// 	//clone2 = gltf_mesh.clone();
-				// });
-				
 				const gridHelper = new THREE.GridHelper( 10, 20, 0xffffff, 0x444444 );
 				scene.add( gridHelper );
 
@@ -233,7 +182,11 @@
 
 				const params = {
 					Morph: 0,
-					Create_morph: Create_morph
+					Chin: 0,
+					Create_morph: Create_morph,
+					dbg: dbg,
+					Add_morph: Add_morph,
+					Add_Chin: Add_chin,
 				};
 				
 				function Create_morph(){
@@ -243,10 +196,6 @@
 					
                     //let nose2 = nose;
                     boss.geometry.computeVertexNormals();
-
-					console.log("j", jen);
-
-					console.log("c2", boss);
 
 					let source_p = new THREE.Float32BufferAttribute( boss.geometry.attributes.position.array, 3 );
 					let source_n = new THREE.Float32BufferAttribute( boss.geometry.attributes.normal.array, 3 );
@@ -269,14 +218,14 @@
 
 					// Set buffer geometry as a morph target for the new mesh
 					morphTargetMesh.name = "Blend";
-					morphTargetMesh.morphTargetInfluences = [0, 0];
-					morphTargetMesh.morphTargetDictionary = { 0: "Morph", 1: "morphTarget" };
+					morphTargetMesh.morphTargetInfluences = [0];
+					morphTargetMesh.morphTargetDictionary = { 0: "Morph"};
 					morphTargetMesh.geometry.morphAttributes.position = [];
 					morphTargetMesh.geometry.morphAttributes.position = [];
 					morphTargetMesh.geometry.morphAttributes.normal = [];
 
-                    let mixed_p = morph_array_2(source_p,target_p, nose_vertices);
-                    let mixed_n = morph_array_2(source_n, target_n, nose_vertices);
+                    let mixed_p = morph_array_2(source_p,target_p, nose_vertices,-0.02,-0.01);
+                    let mixed_n = morph_array_2(source_n, target_n, nose_vertices,0,0);
 
                     console.log("mixess", source_p, target_p);
 
@@ -290,17 +239,53 @@
 					morphTargetMesh.geometry.morphTargets = true;
 					morphTargetMesh.geometry.morphNormals = true;
 
-					
-
 					scene.add(morphTargetMesh);
 					render();
 				}
 
-				// panel.add(controls, 'Character', mesh_names).onChange( function ( value ) {
-				// 	//unused					
-				// });
+				//functio to adding a morph target into the existing blend
+				function addMorph(target ,vertices, type){
 
+					let morph_idx =scene.children.findIndex(obj => obj.name === "Blend");
+					let morph = scene.children[morph_idx];
+
+					let source_p = new THREE.Float32BufferAttribute( morph.geometry.attributes.position.array, 3 );
+					let source_n = new THREE.Float32BufferAttribute( morph.geometry.attributes.normal.array, 3 );
+					let target_p = new THREE.Float32BufferAttribute( target.geometry.attributes.position.array, 3 );
+					let target_n = new THREE.Float32BufferAttribute( target.geometry.attributes.normal.array, 3 );
+
+					morph.morphTargetInfluences.push(0);
+					morph.morphTargetDictionary[morph.morphTargetInfluences.length]= "new";
+
+					let mixed_p = morph_array_2(source_p,target_p, vertices,0,0);
+                    let mixed_n = morph_array_2(source_n, target_n, vertices,0,0);
+					let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
+					let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
+
+					morph.geometry.morphAttributes.position.push(  mt_p );
+					morph.geometry.morphAttributes.normal.push(  mt_n );  
+					
+					scene.remove(morph);
+					scene.add(morph);
+				}
+
+				//GUI
 				panel.add( params, 'Create_morph' ).name( 'Create morph character');
+
+				panel.add( params, 'dbg' ).name( 'Degug');
+
+				panel.add( params, 'Add_morph' ).name( 'Add_morph');
+
+				function dbg(){
+					console.log("Scene", scene);
+				}
+
+				function Add_morph(){
+
+					let head_idx =scene.children.findIndex(obj => obj.name === "Head");
+					addMorph(scene.children[head_idx],chin_vertices,"test");
+					scene.remove(scene.children[head_idx]);
+				}
 
 				panel.add(controls, 'Texture', [0,1]).onChange( function ( value ) {
 					//change the textures between the two that we're blending 
@@ -309,15 +294,40 @@
 
 				});
 
-				panel.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+				//gui folders
+				const nose_folder = panel.addFolder( 'Nose' );
+				const chin_folder = panel.addFolder( 'Chin' );
+
+				nose_folder.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 					
 					let morph_idx = scene.children.findIndex(obj => obj.name === "Blend");
                     scene.children[morph_idx].morphTargetInfluences[0]  =  value;
 				});
 
+
+				chin_folder.add( params, 'Add_Chin' ).name( 'Add Chin Target');
+				chin_folder.add( params, 'Chin', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+					
+					let morph_idx = scene.children.findIndex(obj => obj.name === "Blend");
+                    scene.children[morph_idx].morphTargetInfluences[1]  =  value;
+				});
+
+				
+
+
 				panel.onFinishChange(function (value) {
 					// any change on gui parameters	
 				});
+
+
+				function Add_chin(){
+					console.log("Please Select Model to add Chin");
+					chin_folder.add( params, 'ChinX', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+					
+					console.log("***")
+				});
+					
+				}
 				
 			}
 
@@ -346,8 +356,7 @@
                 return source
             }
 
-
-			function morph_array_2(source, target, indices){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
+			function morph_array_2(source, target, indices, dy , dz ){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
                 //function to modify a position array 
                 source = source.array;
                 target = target.array
@@ -360,16 +369,14 @@
 					const index = indices[i] *3;
 											
 					source[index] = target[index] ;
-					source[index + 1] = target[index + 1] + d.x// +.027;
-					source[index + 2] = target[index + 2] +d.y -0.006 //+.01;
+					source[index + 1] = target[index + 1] +dy//.02 //d.x// +.027;
+					source[index + 2] = target[index + 2] +dz//.02//d.y -0.006 //+.01;
 					
 					
                 }
 				
                 return source
             }
-
-
 
 			function calculate_distances(source, target, indices){
 
@@ -443,14 +450,14 @@
 						if ( selectedObject) {
 							
 							// Restore the original material
-							selectedObject.material = material;
+							//selectedObject.material = material;
 							selectedObject = null;
 						}
 
 						// Select the new object
 						selectedObject = intersects[0].object;
 						// Store the original material to restore it later
-						material = selectedObject.material;
+						//material = selectedObject.material;
 						// Set a new material to indicate selection (e.g. red color)
 						//selectedObject.material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 
@@ -507,7 +514,7 @@
 				}else if ( selection_state == "blend"){
 
 					clone2 = sel_obj.clone();
-					scene.remove(sel_obj);
+					//scene.remove(sel_obj);
 					selection_state = "hold";
 				}
 
