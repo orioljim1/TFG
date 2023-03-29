@@ -56,7 +56,7 @@
 
 			let container, stats, clock, controls, material;
 			let camera, scene, renderer, mixer,active_mesh;
-			let meshes = []; // mesh variables
+			let characters = []; // mesh variables
 			let clone,clone2, initial_size;
 			let selection_state,base_selection, morph_selection; // variables to manage the selection processs;
 			let panel, nose_folder, chin_folder;
@@ -224,7 +224,7 @@
 			//functio to adding a morph target into the existing blend
 			function addMorph(target ,vertices, type){
 
-				let morph_idx =scene.children.findIndex(obj => obj.name === "Blend");
+				let morph_idx =scene.children.findIndex(obj => obj.name.includes("Blend"));
 				let morph = scene.children[morph_idx];
 
 				let source_p = new THREE.Float32BufferAttribute( morph.geometry.attributes.position.array, 3 );
@@ -233,7 +233,7 @@
 				let target_n = new THREE.Float32BufferAttribute( target.geometry.attributes.normal.array, 3 );
 
 				morph.morphTargetInfluences.push(0);
-				morph.morphPartsInfo[type].push( morph.morphTargetInfluences.length ); //store index of the morph part for the slider to know what morph influence to alter 
+				morph.morphPartsInfo[type].push( {id : morph.morphTargetInfluences.length, character: morph.name} ); //store index of the morph part for the slider to know what morph influence to alter 
 				morph.morphTargetDictionary[morph.morphTargetInfluences.length]= type + morph.morphPartsInfo[type].length; 
 
 				let mixed_p = morph_array_2(source_p,target_p, vertices,0,0);
@@ -252,23 +252,32 @@
 					console.log("Please Select Model to add Chin");
 					//fn to load the scene to select the nose
 					selection_state = "Add Chin"
-					
+					let p_idx = getPartIdx("Chin");
+					console.log(p_idx,clone.name);
+					pick_scene(p_idx.names);
+										
 			}
 
 			function Add_morph(){
 
-				let head_idx =scene.children.findIndex(obj => obj.name === "Head");
-				addMorph(scene.children[head_idx],chin_vertices,"test");
-				scene.remove(scene.children[head_idx]);
+				// let head_idx =scene.children.findIndex(obj => obj.name === "Head");
+				// addMorph(scene.children[head_idx],chin_vertices,"test");
+				// scene.remove(scene.children[head_idx]);
+				// console.log(characters);
+				// pick_scene(["Jen"]);
+				emptyScene();
+				
 			}
 
 			function getPartIdx(type){
 
-				let morph_idx =scene.children.findIndex(obj => obj.name === "Blend");
+				let morph_idx =scene.children.findIndex(obj => obj.name.includes("Blend"));
 				if(morph_idx  == -1) return -1;
 				let morph = scene.children[morph_idx];
 				let type_array = morph.morphPartsInfo[type];
-				return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx}
+				const namesArr = morph.morphPartsInfo[type].map(obj => obj.name);
+
+				return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr}
 			}
 
 			//gui 
@@ -284,8 +293,7 @@
 					Selected_Texture: 'T1',
 					avalible_textures: []
 				};
-			
-			
+						
 			function charactgersGUI(meshes2) {
 
 				//init gui
@@ -314,7 +322,7 @@
 
 				nose_folder.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
 					
-					let morph_idx = scene.children.findIndex(obj => obj.name === "Blend");
+					let morph_idx = scene.children.findIndex(obj => obj.name.includes("Blend"));
                     scene.children[morph_idx].morphTargetInfluences[0]  =  value;
 				});		
 
@@ -464,15 +472,14 @@
 
 			function findHead(scene){
 
-				while( scene.name != "Head"  ){
+				while( ! scene.name.includes("Head")  ){
 					
-					let son_idx = scene.children.findIndex(obj => obj.name === "Head");
+					let son_idx = scene.children.findIndex(obj => obj.name.includes("Head"));
 					// if  () scene= scene.children[son_idx]
 					// else scene= scene.children[0]
 					scene = son_idx !=-1 ? scene.children[son_idx] : scene.children[0];					
 				}
 				return scene;
-
 			}
 
 			async function importAssets(routes){
@@ -492,21 +499,66 @@
 					scene.add(gltf_mesh);
 					//render();
 					//clone = gltf_mesh.clone();
+					characters.push(gltf_mesh);
 					} );
 				}
+			}
+
+			function emptyScene(){
+				for (let index = (scene.children.length -1); index >= 0; index--) {
+					const element = scene.children[index];
+					if(element.type == "Mesh" || element.type == "Object3D")scene.remove(element);
+				}
+			}
+
+			function blend_scene(){
+
+				//fn to set the scene to have the blend character in the middle
+				console.log(scene);
+
+				emptyScene()
+
+				clone.position.x = 0;
+				scene.add(clone);
+
+			}
+
+			function pick_scene(avalible_char,main_name){
+
+				emptyScene();
+
+				//const main_name = clone.name;
+				// for (let index = 0; index < 3; index++) {
+				// 	let char_idx = characters.findIndex(obj => obj.name.includes(avalible_char[index]));
+				// 	let char = characters[index];
+				// 	if(char_idx == -1) scene.add(char);	
+				// }
+				scene.add(characters[0]);
+				
+				//add characters 
+				//blend scene that displays all the avaliable characters choices that the user will have at a given choice
 
 			}
 
 			function selection_scheduler(sel_obj){
-
 
 				switch (selection_state) {
 					case "base":
 						console.log(sel_obj);
 						
 						clone = sel_obj.clone();
-						selection_state = "blend"
-						scene.remove(sel_obj);
+						clone.name = sel_obj.name+"Blend";
+						clone.name = "Blend";
+						clone.morphTargetInfluences = [];
+						clone.morphTargetDictionary = {};
+						clone.geometry.morphAttributes.position = [];
+						clone.geometry.morphAttributes.position = [];
+						clone.geometry.morphAttributes.normal = [];
+						clone.morphPartsInfo = {"Nose":[], "Chin": []}; //store each part which morphattribute it corresponds to 
+						//selection_state = "blend"
+						//set scene to have only blend model
+						//scene.remove(sel_obj);
+						blend_scene();
 						break;
 					case "blend":
 						console.log(sel_obj);
