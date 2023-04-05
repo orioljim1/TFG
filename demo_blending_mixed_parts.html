@@ -49,10 +49,11 @@
 			import ears_vertices from './scripts/js/Ears.json' assert { type: "json" };
 
 			let Models_dict= {
-				"Boss": 'boss.glb',
-				"Jen": "jen.glb",
+				"Boss": 'boss_final.glb',
+				"Jen": "jen_final.glb",
 				"Cleo": "cleo.glb",
-				"Jack": "jack_g.glb"
+				"Jack": "jack_g.glb",
+				"B2": 'boss_hair.glb'
 			}
 
 			let container, stats, clock, controls, material;
@@ -219,13 +220,13 @@
 					render();
 			}
 			function getFace(mesh){
-				if(mesh.name.includes("Face") ) return mesh
 				let face_idx =mesh.children.findIndex(obj => obj.name.includes("Face"));
+				if(mesh.name.includes("Face") || face_idx == -1 ) return mesh
 				mesh.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
-
 				return mesh.children[face_idx]
 
 			}
+
 
 			//functio to adding a morph target into the existing blend
 			function addMorph(target ,vertices, type){
@@ -292,7 +293,7 @@
 					selection_state = "Add Ears"
 					let p_idx = getPartIdx("Ears");
 					console.log(p_idx,clone.name);
-					pick_scene(p_idx.names);				
+					pick_scene(p_idx.names);					
 			}
 
 			function Add_morph(){
@@ -306,6 +307,7 @@
 				let morph_idx =scene.children.findIndex(obj => obj.name.includes("Blend"));
 				if(morph_idx  == -1 ) return -1;
 				let morph = scene.children[morph_idx];
+				morph = getFace(morph);
 				if(morph.morphTargetInfluences == undefined ) return {part_len: 0, target_idx: 0, morph_idx: morph_idx, names: []};
 				let type_array = morph.morphPartsInfo[type];
 				const namesArr = morph.morphPartsInfo[type].map(obj => obj.name);
@@ -635,7 +637,13 @@
 						let tag =  code + " #" + p_idx.part_len;
 						params[tag] = 0;
 						folder.add( params, tag, 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+							if( scene.children[p_idx.morph_idx].children.length > 0 ){
+								let face_idx =scene.children[p_idx.morph_idx].children.findIndex(obj => obj.name.includes("Face"));
+								scene.children[p_idx.morph_idx].children[face_idx].morphTargetInfluences[p_idx.target_idx]  =  value;
+
+							}else{
 							scene.children[p_idx.morph_idx].morphTargetInfluences[p_idx.target_idx]  =  value;
+							}
 						});
 
 						console.log(p_idx.target_idx);
@@ -646,10 +654,13 @@
 						//fn to remove the non main meshes of the scene
 			}
 
-			function checkHead(sel_obj){
+			function checkHead(mesh){
 				//function to separate the head (eyes, eyebrows , eyelashes, hair...) from the face mesh 
-				console.log(sel_obj);
-				return sel_obj.parent
+				
+				if(mesh.name.includes("Head") ) return mesh
+				let face_idx =mesh.parent.children.findIndex(obj => obj.name.includes("Face"));
+				mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to
+				return mesh.parent
 			}
 
 			function selection_scheduler(sel_obj){
