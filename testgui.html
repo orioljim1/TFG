@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		
+		<link rel="stylesheet" href="main.css">
+	  </head>
+	
+	<body>
+
+		<div id="loading-screen" >
+			<div class="spinner"></div>
+			<h1>Loading...</h1>
+		</div>
+		  
+		  
+		<div id="container" class="hidden"></div>
+		
+		<!-- Import maps polyfill -->
+		<!-- Remove this when import maps will be widely supported -->
+		<script async src="https://unpkg.com/es-module-shims@1.3.6/dist/es-module-shims.js"></script>
+
+		<script type="importmap">
+			{
+				"imports": {
+					"three": "./node_modules/three/build/three.module.js",
+					"three/addons/": "./node_modules/three/examples/jsm/"
+				}
+			}
+		</script>
+		<script src="https://dagrejs.github.io/project/graphlib/latest/graphlib.js"></script>
+
+        <script src = "scripts/js/litegui.js"></script>
+
+		<script type="module">
+
+			import * as THREE from 'three';
+
+			import Stats from 'three/addons/libs/stats.module.js';
+
+			import { ColladaLoader } from 'three/addons/loaders/ColladaLoader.js';
+			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
+            
+            //import {LiteGUI} from "/node_modules/liteguijs/dist/litegui.js";
+            //import "liteguijs/dist/litegui.css";
+            //window.LiteGUI = LiteGUI;
+            
+
+			//vertex import for face parts
+			import nose_vertices from './scripts/js/nose_test_3.json' assert { type: "json" };
+			import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
+			import ears_vertices from './scripts/js/Ears.json' assert { type: "json" };
+
+			let Models_dict= {
+				"Boss": 'boss_final.glb',
+				"Jen": "jen_final.glb",
+				"Cleo": "cleo.glb",
+				"Jack": "jack_g.glb",
+				"B2": 'boss_hair_2.glb'
+			}
+
+			let container, stats, clock, controls, material;
+			let camera, scene, renderer, mixer,active_mesh;
+			let characters = []; // mesh variables
+			let clone,clone2, initial_size;
+			let selection_state,base_selection, morph_selection; // variables to manage the selection processs;
+			let panel, nose_folder, chin_folder, ears_folder;
+			
+			//App flow
+			await init();
+			setTimeout(swap_visibility, 2000); //2s as when models are imported depending on the pc it takes a little bit longer for them to be displayed on the screen
+			selection_state = "base";
+			
+			animate();
+
+			async function init() {
+
+                
+				container = document.getElementById( 'container' );
+
+				camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, .1, 1000 );
+				camera.position.set( 0, 2,  5 );
+
+				scene = new THREE.Scene();
+
+				clock = new THREE.Clock();
+					
+				const gridHelper = new THREE.GridHelper( 10, 20, 0xffffff, 0x444444 );
+				scene.add( gridHelper );
+
+				const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
+				scene.add( ambientLight );
+
+				const pointLight = new THREE.PointLight( 0xffffff, 0.8 );
+				scene.add( camera );
+				camera.add( pointLight );
+
+				renderer = new THREE.WebGLRenderer( { antialias: true } );
+				renderer.outputEncoding = THREE.sRGBEncoding;
+				renderer.setPixelRatio( window.devicePixelRatio );
+				renderer.setSize( window.innerWidth, window.innerHeight );
+				container.appendChild( renderer.domElement );
+				renderer.setClearColor(0xbfe3dd);
+
+				controls = new OrbitControls( camera, renderer.domElement );
+				controls.screenSpacePanning = true;
+				controls.minDistance = 1;
+				controls.maxDistance = 8000;
+				controls.target.set( 0, 2, 0 );
+				controls.update();
+
+				stats = new Stats();
+				container.appendChild( stats.dom );
+
+				window.addEventListener( 'resize', onWindowResize );
+
+				await importAssets(Models_dict);
+				render();
+				//charactgersGUI(null);			
+			}
+
+			function swap_visibility(){
+				var c = document.getElementById('container');
+				c.classList.toggle('hidden');
+				c = document.getElementById('loading-screen');
+				c.classList.toggle('hidden')
+				charactgersGUI(null);	
+			}
+
+			function onWindowResize() {
+
+				camera.aspect = window.innerWidth / window.innerHeight;
+				camera.updateProjectionMatrix();
+
+				renderer.setSize( window.innerWidth, window.innerHeight );
+			}
+
+			function animate() {
+
+				requestAnimationFrame( animate );
+
+				render();
+				stats.update();
+
+			}
+
+			function render() {
+
+				const delta = clock.getDelta();
+
+				if ( mixer !== undefined ) {
+
+					mixer.update( delta );
+
+				}
+
+				renderer.render( scene, camera );
+
+			}
+
+			function areEqual( a1, a2){
+
+				console.log(a1)
+				console.log(a2)
+
+
+				for (let index = 0; index < a1.length; index++) {
+					if( a1[index] != a2[index]) return false	
+				}
+
+				return true; 
+			}
+
+			function Create_morph(){
+                    //function that creates the model that will be morphed; //UNUSED
+
+
+					let morph_idx =scene.children.findIndex(obj => obj.name.includes("Boss"));
+					let jen1 =scene.children.findIndex(obj => obj.name.includes("Jen"));
+
+					let jen = scene.children[jen1];
+                    let boss = scene.children[morph_idx];; 
+					
+                    //let nose2 = nose;
+                    boss.geometry.computeVertexNormals();
+
+					let source_p = new THREE.Float32BufferAttribute( boss.geometry.attributes.position.array, 3 );
+					let source_n = new THREE.Float32BufferAttribute( boss.geometry.attributes.normal.array, 3 );
+					let target_p = new THREE.Float32BufferAttribute( jen.geometry.attributes.position.array, 3 );
+					let target_n = new THREE.Float32BufferAttribute( jen.geometry.attributes.normal.array, 3 );
+
+					let material_1 = boss.material;
+					let material_2 = jen.material;
+
+					textures.avalible_textures = [material_1,material_2];
+                                     
+					let morphTargetMesh = new THREE.Mesh(boss.geometry.clone(), material_1);
+					morphTargetMesh.geometry.computeVertexNormals();
+
+					// Set buffer geometry as a morph target for the new mesh
+					morphTargetMesh.name = "Blend";
+					morphTargetMesh.morphTargetInfluences = [0];
+					morphTargetMesh.morphTargetDictionary = { 0: "Morph"};
+					morphTargetMesh.geometry.morphAttributes.position = [];
+					morphTargetMesh.geometry.morphAttributes.position = [];
+					morphTargetMesh.geometry.morphAttributes.normal = [];
+					morphTargetMesh.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
+
+                    let mixed_p = morph_array_2(source_p,target_p, nose_vertices, 0, 0);
+                    let mixed_n = morph_array_2(source_n, target_n, nose_vertices,0,0);
+                    console.log("mixess", source_p, target_p);
+
+                    let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
+					let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
+
+					morphTargetMesh.geometry.morphAttributes.position.push(  mt_p );
+					morphTargetMesh.geometry.morphAttributes.normal.push(  mt_n );                  
+
+    				morphTargetMesh.geometry.morphTargetsRelative = false; //mode of blend not working
+					morphTargetMesh.geometry.morphTargets = true;
+					morphTargetMesh.geometry.morphNormals = true;
+
+					scene.add(morphTargetMesh);
+					render();
+			}
+			function getFace(mesh){
+				let face_idx =mesh.children.findIndex(obj => obj.name.includes("Face"));
+				if(mesh.name.includes("Face") || face_idx == -1 ) return mesh
+				mesh.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
+				return mesh.children[face_idx]
+
+			}
+
+
+			//functio to adding a morph target into the existing blend
+			function addMorph(target ,vertices, type){
+
+				let morph_idx =scene.children.findIndex(obj => obj.name.includes("Blend"));
+				let morph = scene.children[morph_idx];
+
+				//fn to select face inside the head object 
+				morph = getFace(morph);
+
+				let source_p = new THREE.Float32BufferAttribute( morph.geometry.attributes.position.array, 3 );
+				let source_n = new THREE.Float32BufferAttribute( morph.geometry.attributes.normal.array, 3 );
+				let target_p = new THREE.Float32BufferAttribute( target.geometry.attributes.position.array, 3 );
+				let target_n = new THREE.Float32BufferAttribute( target.geometry.attributes.normal.array, 3 );
+
+						
+				let name = type + morph.morphPartsInfo[type].length;
+				
+				if(morph.morphTargetInfluences == undefined) initiaizeTargets(morph,name);
+				else{ 
+					morph.morphTargetDictionary[morph.morphTargetInfluences.length]= name;
+					morph.morphTargetInfluences.push(0);
+				}
+				morph.morphPartsInfo[type].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
+
+
+				let mixed_p = morph_array_2(source_p,target_p, vertices,type);
+				let mixed_n = morph_array_2(source_n, target_n, vertices,type);
+				let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
+				let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
+
+				morph.geometry.morphAttributes.position.push(  mt_p );
+				morph.geometry.morphAttributes.normal.push(  mt_n );  
+
+				morph = scene.children[morph_idx];
+
+				scene.remove(morph);
+				scene.add(morph);
+			}
+
+			function Add_chin(){
+					console.log("Please Select Model to add Chin");
+					//fn to load the scene to select the nose
+					selection_state = "Add Chin"
+					let p_idx = getPartIdx("Chin");
+					console.log(p_idx,clone.name);
+					pick_scene(p_idx.names);
+										
+			}
+
+			function Add_Nose(){
+					console.log("Please Select Model to add Nose");
+					//fn to load the scene to select the nose
+					selection_state = "Add Nose"
+					let p_idx = getPartIdx("Nose");
+					console.log(p_idx,clone.name);
+					pick_scene(p_idx.names);
+										
+			}
+
+			function Add_Ears(){
+					console.log("Please Select Model to add Nose");
+					//fn to load the scene to select the nose
+					selection_state = "Add Ears"
+					let p_idx = getPartIdx("Ears");
+					console.log(p_idx,clone.name);
+					pick_scene(p_idx.names);					
+			}
+
+			function Add_morph(){
+
+				Create_morph();
+				
+			}
+
+			function getPartIdx(type){
+
+				let morph_idx =scene.children.findIndex(obj => obj.name.includes("Blend"));
+				if(morph_idx  == -1 ) return -1;
+				let morph = scene.children[morph_idx];
+				morph = getFace(morph);
+				if(morph.morphTargetInfluences == undefined ) return {part_len: 0, target_idx: 0, morph_idx: morph_idx, names: []};
+				let type_array = morph.morphPartsInfo[type];
+				const namesArr = morph.morphPartsInfo[type].map(obj => obj.name);
+
+				return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr}
+			}
+
+			//gui 
+			const params = {
+					Morph: 0,
+					Chin: 0,
+					Create_morph: Create_morph,
+					Add_morph: Add_morph,
+					Add_Chin: Add_chin,
+					Add_Nose: Add_Nose,
+					Add_Ears: Add_Ears
+			};
+
+			var textures = {
+					Selected_Texture: 'T1',
+					avalible_textures: []
+				};
+						
+			function charactgersGUI(meshes2) {
+
+				//init gui
+				panel = new GUI( { width: 310 } );
+				
+				var controls = {
+					Morph_meshes: 'Start',
+					active_mesh: 0
+				};
+
+				//GUI
+				panel.add( params, 'Create_morph' ).name( 'Create morph character');
+
+				panel.add( params, 'Add_morph' ).name( 'Add_morph');
+
+				panel.add(controls, 'Texture', [0,1]).onChange( function ( value ) {
+					//change the textures between the two that we're blending 
+					console.log(scene);
+					scene.children[6].material  =  textures.avalible_textures[value];
+
+				});	
+				
+				//gui folders (declared here for order)
+				nose_folder = panel.addFolder( 'Nose' );
+				chin_folder = panel.addFolder( 'Chin' );
+				ears_folder = panel.addFolder( 'Ears' );
+
+				nose_folder.add( params, 'Morph', 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+					
+					let morph_idx = scene.children.findIndex(obj => obj.name.includes("Blend"));
+                    scene.children[morph_idx].morphTargetInfluences[0]  =  value;
+				});		
+
+				chin_folder.add( params, 'Add_Chin' ).name( 'Add Chin Target');
+				nose_folder.add( params, 'Add_Nose' ).name( 'Add Nose Target');
+				ears_folder.add( params, 'Add_Ears' ).name( 'Add Ears Target');
+
+				
+				panel.onFinishChange(function (value) {
+					// any change on gui parameters	
+				});
+
+			}
+
+			let parts_dict= {
+				"Nose": 214 , 	//good enough 
+				"Chin": 45		//1 83 75
+				
+			}
+			
+			function morph_array_2(source, target, indices, type ){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
+                //function to modify a position array 
+                source = source.array;
+                target = target.array
+                indices= indices.vertices;
+
+				let d = calculate_distances(source,target,indices);
+				let dis = getIdxDisp(source,target,indices, parts_dict[type]);
+				console.log("displacements ", dis);
+				
+                for (let i = 0; i < indices.length; i++) {
+
+					const index = indices[i] *3;										
+					source[index] = target[index] ;
+					source[index + 1] = target[index + 1] +dis.dy
+					source[index + 2] = target[index + 2] +dis.dz
+					
+				}
+				
+                return source
+            }
+
+			function getIdxDisp(source,target,indices, index){
+
+				const i = indices[index] *3;	
+				let dx = source [i] - target[i];
+				let dy = source[i+1] - target[i+1];
+				let dz = source[i+2] - target[i+2];
+				return {dx:dx , dy: dy , dz: dz}
+			}
+
+
+			function calculate_distances(source, target, indices){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
+                //function to modify a position array 
+                
+
+				//let d = calculate_distances(source,target,indices);
+				let fx=0;
+				let fy= 0 ;
+				let fz =0 ;
+
+				let target_y = -0.015;
+				let target_z = 0.008;
+
+
+				let closestDistance = Infinity;
+  				let closestPoint = null;
+				let dist= {};
+				
+                for (let i = 0; i < indices.length; i++) {
+
+					const index = indices[i] *3;	
+					let dx = source [index] - target[index];
+					let dy = source[index+1] - target[index+1];
+					let dz = source[index+2] - target[index+2];
+					//console.log("inx", i, dx , dy , dz );
+					const distance = Math.sqrt(Math.pow(target_y - dy, 2) + Math.pow(target_z - dz, 2));
+					if (distance < closestDistance) {
+					closestDistance = distance;
+					closestPoint = i;
+					dist = {x: dx, y: dy, z: dz};
+					}
+					fx += dx;
+					fy += dy;
+					fz += dz;
+				
+				}
+
+				console.log("finals ", fx, fy , fz);
+				console.log("finalsdiv ", fx/indices.length, fy/indices.length , fz/indices.length);
+				console.log("closest", closestPoint, indices.length);
+				console.log("closest",dist);
+
+
+				
+                //return source
+            }
+
+
+			// function calculate_distances(source, target, indices){
+
+			// 	let dx=0 ;
+			// 	let dy = 0;
+			// 	let dz = 0;
+			// 	let i = 0;
+			// 	let a= []; 
+			// 	let b= [];
+
+
+			// 	for (let i = 0; i < source.length; i+=3) {
+
+			// 		const index = i / 3;
+
+			// 		if(indices.includes(index)){
+			// 			i++;
+			// 			// Swap the values of the current vertex with the corresponding vertex in target
+			// 			a.push(i);
+			// 			dx += source [i] - target[i];
+			// 			dy += source[i+1] - target[i+1];
+			// 			dz += source[i+2] - target[i+2];
+			// 			console.log("dx",dx);
+			// 			console.log("dy",dy);
+			// 			console.log("dz",dz);
+			// 		} 
+			// 	}
+
+
+				// for (let i = 0; i < indices.length; i++) {
+				// 	a.push(indices[i]);
+
+				// 	const index = indices[i] *3;
+											
+				// 	dx += source [index] - target[index];
+				// 	dy += source[index+1] - target[index+1];
+				// 	dz += source[index+2] - target[index+2];
+
+
+				// }
+
+				
+			// 	console.log("distances", dx/indices.length, dy/indices.length , dz/indices.length);
+			// 	console.log("arr", a );
+
+			// 	return {x:dx, y:dy, z:dz}
+			// }
+		
+			// Define a variable to hold the currently selected object
+			let selectedObject = null;
+
+			// Add event listener for click event on renderer's DOM element
+			renderer.domElement.addEventListener( 'click', function ( event ) {
+				
+				if(selection_state != "finished"){
+					// Calculate mouse position in normalized device coordinates
+					const mouse = new THREE.Vector2(); 
+					mouse.x = ( event.clientX / renderer.domElement.clientWidth ) * 2 - 1;
+					mouse.y = - ( event.clientY / renderer.domElement.clientHeight ) * 2 + 1;
+
+					// Create a raycaster from the camera to the clicked position
+					const raycaster = new THREE.Raycaster();
+					raycaster.setFromCamera( mouse, camera );
+
+					// Check for intersections with objects in the scene
+					const intersects = raycaster.intersectObjects( scene.children, true );
+
+					// If there are intersections, select the first one
+					if ( intersects.length > 0 && intersects[0].object.type != 'GridHelper' ) {
+
+						// Deselect the previously selected object (if any)
+						if ( selectedObject) {
+							
+							// Restore the original material
+							//selectedObject.material = material;
+							selectedObject = null;
+						}
+
+						// Select the new object
+						selectedObject = intersects[0].object;
+						// Store the original material to restore it later
+						//material = selectedObject.material;
+						// Set a new material to indicate selection (e.g. red color)
+						//selectedObject.material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
+
+						selection_scheduler(selectedObject);
+					}
+				}
+			} );
+
+			function findHead(scene){
+
+				while( ! scene.name.includes("Head")  ){
+					
+					let son_idx = scene.children.findIndex(obj => obj.name.includes("Head"));
+					// if  () scene= scene.children[son_idx]
+					// else scene= scene.children[0]
+					scene = son_idx !=-1 ? scene.children[son_idx] : scene.children[0];					
+				}
+				return scene;
+			}
+
+			async function importAssets(routes){
+				//import assets
+				const values = Object.values(routes);
+				const keys = Object.keys(routes);
+				const loader_glb = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
+
+				for (let i = 0; i < values.length; i++) {
+					
+					let route = values[i];
+					loader_glb.load( route, function ( gltf ) {
+					
+					let gltf_mesh = findHead(gltf.scene);
+                    gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
+					if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
+					gltf_mesh.name = keys[i]+gltf_mesh.name;
+					scene.add(gltf_mesh);
+					characters.push(gltf_mesh);
+					importHairs(gltf_mesh);
+					} );
+				}
+			}
+
+			let hairs = [];
+			function importHairs(face){
+				let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
+				if(hair_idx == -1) return
+				let hair = face.children[hair_idx];
+				hairs.push(hair);
+
+			};
+
+
+
+
+			function emptyScene(){
+				for (let index = (scene.children.length -1); index >= 0; index--) {
+					const element = scene.children[index];
+					if(element.type == "Mesh" || element.type == "Object3D")scene.children[index].visible = false;
+					
+				}
+			}
+
+			function blend_scene(){
+
+				//fn to set the scene to have the blend character in the middle
+				emptyScene()
+
+
+				let morph_idx =scene.children.findIndex(obj => obj.name.includes("Blend"));
+				
+				if (morph_idx == -1) {
+				clone.position.x = 0;
+				scene.add(clone);
+				}else{
+					let morph = scene.children[morph_idx];	
+					morph.visible = true;
+				}
+			}
+
+			function pick_scene(avalible_char,main_name){
+
+				emptyScene();
+
+				for (let index = (scene.children.length -1); index >= 0; index--) {
+					const element = scene.children[index];
+					if(!avalible_char.includes(element.name) && !element.name.includes(clone.name) ) scene.children[index].visible = true;
+				}
+			}
+
+			function initiaizeTargets(blend, name){
+
+				blend.morphTargetInfluences = [0];
+				blend.morphTargetDictionary = { 0: name};
+				blend.geometry.morphAttributes.position = [];
+				blend.geometry.morphAttributes.position = [];
+				blend.geometry.morphAttributes.normal = [];
+			}
+
+			function blendPart(sel_obj, vertices,code, folder){
+					console.log("Added", code, " sel_obj", sel_obj);
+						let p_idx = getPartIdx(code);
+						addMorph(sel_obj,vertices,code);
+						let tag =  code + " #" + p_idx.part_len;
+						params[tag] = 0;
+						folder.add( params, tag, 0, 1 ).step( 0.01 ).onChange( function ( value ) {
+							if( scene.children[p_idx.morph_idx].children.length > 0 ){
+								let face_idx =scene.children[p_idx.morph_idx].children.findIndex(obj => obj.name.includes("Face"));
+								scene.children[p_idx.morph_idx].children[face_idx].morphTargetInfluences[p_idx.target_idx]  =  value;
+
+							}else{
+							scene.children[p_idx.morph_idx].morphTargetInfluences[p_idx.target_idx]  =  value;
+							}
+						});
+
+						console.log(p_idx.target_idx);
+						console.log(scene.children[p_idx.morph_idx]);
+						selection_state = "idle";
+						//return to blend scene
+						blend_scene();
+						//fn to remove the non main meshes of the scene
+			}
+
+			function checkHead(mesh){
+				//function to separate the head (eyes, eyebrows , eyelashes, hair...) from the face mesh 
+				
+				if(mesh.name.includes("Head") ) return mesh
+				let face_idx =mesh.parent.children.findIndex(obj => obj.name.includes("Face"));
+				mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to
+				return mesh.parent
+			}
+
+			function selection_scheduler(sel_obj){
+
+				switch (selection_state) {
+					case "base":
+						
+
+						sel_obj = checkHead(sel_obj);
+						clone = sel_obj.clone();
+						//move to create clone fn 
+						clone.name = sel_obj.name+"Blend";
+						clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
+						selection_state = "idle";
+						//set scene to have only blend model
+						scene.remove(sel_obj);
+						blend_scene();
+						break;
+					case "blend":
+						console.log(sel_obj);
+						clone2 = sel_obj.clone();
+						//scene.remove(sel_obj);
+						selection_state = "idle";
+						break;
+					case "Add Chin":
+						blendPart(sel_obj,chin_vertices, "Chin", chin_folder);
+						break;
+					case "Add Nose":
+						blendPart(sel_obj,nose_vertices, "Nose", nose_folder);
+					case "Add Ears":
+						blendPart(sel_obj,ears_vertices, "Ears", ears_folder);
+					break;
+					
+					
+				
+					default:
+						console.log("default")
+
+						break;
+				}
+
+				// if(selection_state == "base"){
+				// 	console.log(sel_obj);
+					
+				// 	clone = sel_obj.clone();
+				// 	selection_state = "blend"
+				// 	scene.remove(sel_obj);
+
+				// }else if ( selection_state == "blend"){
+
+				// 	clone2 = sel_obj.clone();
+				// 	//scene.remove(sel_obj);
+				// 	selection_state = "hold";
+				// }
+
+			}
+
+		
+
+		</script>
+
+	</body>
+</html>

@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "liteguijs": "^1.0.2",
     "three": "^0.149.0"
   }
 }

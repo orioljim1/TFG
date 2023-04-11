@@ -38,7 +38,7 @@
 			import Stats from 'three/addons/libs/stats.module.js';
 
 			import { ColladaLoader } from 'three/addons/loaders/ColladaLoader.js';
-			import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+			import { GLTFLoader } from './node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 
 			import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
@@ -53,7 +53,7 @@
 				"Jen": "jen_final.glb",
 				"Cleo": "cleo.glb",
 				"Jack": "jack_g.glb",
-				"B2": 'boss_hair.glb'
+				"B2": 'boss_hair_2.glb'
 			}
 
 			let container, stats, clock, controls, material;
@@ -573,18 +573,27 @@
 					loader_glb.load( route, function ( gltf ) {
 					
 					let gltf_mesh = findHead(gltf.scene);
-					//let gltf_mesh = gltf.scene.children[0].children[0].children[0];
                     gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
 					if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
 					gltf_mesh.name = keys[i]+gltf_mesh.name;
-					console.log("name", gltf_mesh.name);
 					scene.add(gltf_mesh);
-					//render();
-					//clone = gltf_mesh.clone();
 					characters.push(gltf_mesh);
+					importHairs(gltf_mesh);
 					} );
 				}
 			}
+
+			let hairs = [];
+			function importHairs(face){
+				let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
+				if(hair_idx == -1) return
+				let hair = face.children[hair_idx];
+				hairs.push(hair);
+
+			};
+
+
+
 
 			function emptyScene(){
 				for (let index = (scene.children.length -1); index >= 0; index--) {
@@ -610,6 +619,8 @@
 					morph.visible = true;
 				}
 			}
+
+			
 
 			function pick_scene(avalible_char,main_name){
 
