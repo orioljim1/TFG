@@ -934,9 +934,9 @@ var LiteGUI = {
 		var input = dialog.content.querySelector("input,textarea");
 		input.addEventListener("keydown", inner_key, true);
 
-		function inner() {
+		function inner(e, force_close) {
 			var value = input.value;
-			if(this.dataset && this.dataset["value"] == "cancel")
+			if(force_close || (this.dataset && this.dataset["value"] == "cancel"))
 				value = null;
 			dialog.close(); //close before callback
 			if(callback)
@@ -947,13 +947,14 @@ var LiteGUI = {
 		{
 			if (!e)
 				e = window.event;
-			var keyCode = e.keyCode || e.which;
-			if (keyCode == '13'){
-				inner();
-				return false;
-			}		
-			if (keyCode == '29')
-				dialog.close();
+			switch(e.key) {
+				case 'Enter':
+					inner(null);
+					return false;
+				case 'Escape':
+					inner(null, true);
+					return false;
+			}
 		};
 
 		input.focus();
@@ -1814,7 +1815,7 @@ function ContextMenu( values, options )
 		}
 	}
 
-	if( options.event && options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "PointerEvent" && options.event.constructor.name !== "CustomEvent" )
+	if( options.event && options.event.constructor.name !== "KeyboardEvent" && options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "PointerEvent" && options.event.constructor.name !== "CustomEvent" )
 	{
 		console.error("Event passed to ContextMenu is not of type MouseEvent or CustomEvent. Ignoring it.");
 		options.event = null;
@@ -1876,7 +1877,7 @@ function ContextMenu( values, options )
 			return;
 		if(root.closing_timer)
 			clearTimeout( root.closing_timer );
-		root.closing_timer = setTimeout( that.close.bind(that, e), 500 );
+		root.closing_timer = setTimeout( that.close.bind(that, e), 250 );
 		//that.close(e);
 	});
 
@@ -1911,7 +1912,7 @@ function ContextMenu( values, options )
 	var top = options.top || 0;
 	if(options.event)
 	{
-		if( options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "PointerEvent" && options.event.constructor.name !== "CustomEvent" )
+		if( options.event.constructor.name !== "KeyboardEvent" && options.event.constructor.name !== "MouseEvent" && options.event.constructor.name !== "PointerEvent" && options.event.constructor.name !== "CustomEvent" )
 		{
 			console.warn("Event passed to ContextMenu is not of type MouseEvent");
 			options.event = null;
@@ -1927,6 +1928,12 @@ function ContextMenu( values, options )
 			{
 				var rect = options.parentMenu.root.getBoundingClientRect();
 				left = rect.left + rect.width;
+			}
+
+			if(options.event.constructor.name === "KeyboardEvent")
+			{
+				left -= 50;
+				top += 50;
 			}
 
 			var body_rect = document.body.getBoundingClientRect();
@@ -3127,7 +3134,7 @@ LiteGUI.Console = Console;
 		var dynamic_section = null;
 		if(editable)
 		{
-			splitinfo = " - " + (Area.splitbar_size + 2) +"px"; //2 px margin �?
+			splitinfo = " - " + (Area.splitbar_size + 2) +"px"; //2 px margin ï¿½?
 			splitbar = document.createElement("div");
 			splitbar.className = "litesplitbar " + direction;
 			if(direction == "vertical")
@@ -3609,6 +3616,9 @@ LiteGUI.Console = Console;
 		if( typeof(data) == "function" )
 			data = { callback: data };
 
+		// Subtitles
+		data.disabled = data.subtitle;
+
 		var prev_length = this.menu.length;
 
 		var tokens = path.split("/");
@@ -3831,6 +3841,24 @@ LiteGUI.Console = Console;
 				//item.innerHTML = "<span class='separator'></span>";
 			}
 
+			if(menu_item.data.icon) {
+				var icon = document.createElement('i');
+				item.appendChild( icon );
+				icon.outerHTML = menu_item.data.icon;
+			}
+
+			if(menu_item.data.short) {
+				var short = document.createElement('span');
+				short.innerHTML = menu_item.data.short;
+				short.className += " mb-shortcut";
+				item.appendChild( short );
+				// menu_item.data.disabled = true;
+			}
+
+			if(menu_item.data.subtitle) {
+				item.className += " subtitle";
+			}
+			
 			item.data = menu_item;
 
 			//check if it has to show the item being 'checked'
@@ -6287,8 +6315,7 @@ LiteGUI.Console = Console;
 				code += "<button class='litebutton mini-button hide-button'></button>";
 			if(options.detachable)
 				code += "<button class='litebutton mini-button detach-button'></button>";
-			
-			if(options.close || options.closable)
+			if((options.close || options.closable) && !options.noclose)
 				code += "<button class='litebutton mini-button close-button'>"+ LiteGUI.special_codes.close +"</button>";
 			code += "</div>";
 		}
@@ -7295,7 +7322,7 @@ Inspector.prototype.refresh = function()
 		this.on_refresh();
 }
 
-// Append widget to this inspector (TODO: rename to appendWidget)
+// Append widget to this inspector
 // + widget_parent
 // + replace
 Inspector.prototype.append = function( widget, options )
@@ -8023,17 +8050,13 @@ Inspector.prototype.addStringButton = function( name, value, options)
 	var that = this;
 	this.values[name] = value;
 	
-	var element = this.createWidget( name, "<span class='inputfield button'><input type='text' tabIndex='"+this.tab_index+"' class='text string' value='' "+(options.disabled?"disabled":"")+"/></span><button class='micro'>"+(options.button || "...")+"</button>", options);
+	var element = this.createWidget( name, "<span class='inputfield button'><input type='text' tabIndex='"+this.tab_index+"' class='text string' value='"+value+"' "+(options.disabled?"disabled":"")+"/></span><button class='micro'>"+(options.button || "...")+"</button>", options);
 	var input = element.querySelector(".wcontent input");
-	input.value = value;
 	input.addEventListener("change", function(e) { 
 		var r = Inspector.onWidgetChange.call(that,element,name,e.target.value, options);
 		if(r !== undefined)
 			this.value = r;
 	});
-
-	if( options.disabled )
-		input.setAttribute("disabled","disabled");
 
 	element.setIcon = function(img)
 	{
@@ -8431,8 +8454,8 @@ Inspector.prototype.addVector3 = function(name,value, options)
 	element.setValue = function( v, skip_event ) { 
 		if(!v)
 			return;
-		dragger1.setValue(v[0],true);
-		dragger2.setValue(v[1],true);
+		dragger1.setValue(v[0],skip_event);
+		dragger2.setValue(v[1],skip_event);
 		dragger3.setValue(v[2],skip_event); //last triggers
 	}
 	element.setRange = function(min,max) { dragger1.setRange(min,max); dragger2.setRange(min,max); dragger3.setRange(min,max); }
@@ -8795,7 +8818,7 @@ Inspector.prototype.addSlider = function(name, value, options)
 	this.values[name] = value;
 
 	var element = this.createWidget(name,"<span class='inputfield full'>\
-				<input tabIndex='"+this.tab_index+"' type='text' class='slider-text fixed liteslider-value' value='' /><span class='slider-container'></span></span>", options);
+				<input tabIndex='"+this.tab_index+"' type='text' class='slider-text fixed nano' value='"+value+"' /><span class='slider-container'></span></span>", options);
 
 	var slider_container = element.querySelector(".slider-container");
 
@@ -8805,7 +8828,6 @@ Inspector.prototype.addSlider = function(name, value, options)
 	//Text change -> update slider
 	var skip_change = false; //used to avoid recursive loops
 	var text_input = element.querySelector(".slider-text");
-	text_input.value = value;
 	text_input.addEventListener('change', function(e) {
 		if(skip_change)
 			return;
@@ -9529,12 +9551,9 @@ Inspector.prototype.addButton = function(name, value, options)
 
 	var title = options.title || "";
 	
-	var element = this.createWidget(name,"<button tabIndex='"+ this.tab_index + "' "+attrs+"></button>", options);
+	var element = this.createWidget(name,"<button title='"+title+"' class='litebutton "+button_classname+"' tabIndex='"+ this.tab_index + "' "+attrs+">"+value+"</button>", options);
 	this.tab_index++;
 	var button = element.querySelector("button");
-	button.setAttribute("title",title);
-	button.className = "litebutton " + button_classname;
-	button.innerHTML = value;
 	button.addEventListener("click", function(event) {
 		Inspector.onWidgetChange.call( that, element, name, this.innerHTML, options, false, event);
 		LiteGUI.trigger( button, "wclick", value );
@@ -9576,9 +9595,10 @@ Inspector.prototype.addButtons = function(name, value, options)
 		for(var i in value)
 		{
 			var title = "";
+			var is_selected = (value[i] === options.selected);
 			if( options.title && options.title.constructor === Array)
 				title = options.title[i] || "";
-			code += "<button class='litebutton' title='"+title+"' tabIndex='"+this.tab_index+"' style='"+style+"'>"+value[i]+"</button>";
+			code += "<button class='litebutton " + (is_selected ? "selected" : "") + "' title='"+title+"' tabIndex='"+this.tab_index+"' style='"+style+"'>"+value[i]+"</button>";
 			this.tab_index++;
 		}
 	}
@@ -9588,6 +9608,13 @@ Inspector.prototype.addButtons = function(name, value, options)
 	{
 		var button = buttons[i];
 		button.addEventListener("click", function(evt) {
+			var buttons = element.querySelectorAll("button");
+			for(var i = 0; i < buttons.length; ++i)
+			{
+				buttons[i].classList.remove("selected");
+				if(buttons[i] == evt.currentTarget)
+					buttons[i].classList.add("selected");
+			}
 			Inspector.onWidgetChange.call(that, element, name, this.innerHTML, options, null, evt);
 			LiteGUI.trigger( element, "wclick",this.innerHTML );
 		});
@@ -10045,7 +10072,6 @@ Inspector.prototype.addArray = function( name, value, options )
 		this.value[ this.index ] = v;
 		if(options.callback)
 			options.callback.call( container, this.value, this.index );
-		//todo: trigger change
 	}
 
 	container.setValue = function(v)
@@ -10133,9 +10159,12 @@ Inspector.prototype.addSection = function( name, options )
 	if(options.instance)
 		element.instance = options.instance;
 
+	
+    const makeSettings = () => { return options.settings_title?options.settings_title:"<img class='section-settings' src='data/imgs/mini-icon-gear.png'>"; }
+
 	var code = "";
 	if(name)
-		code += "<div class='wsectiontitle'>"+(options.no_collapse ? "" : "<span class='switch-section-button'></span>")+name+"</div>";
+		code += "<div class='wsectiontitle'>"+(options.no_collapse ? "" : "<span class='switch-section-button'></span>")+(options.pretitle?options.pretitle:"")+name+(options.settings?makeSettings():"")+"</div>";
 	code += "<div class='wsectioncontent'></div>";
 	element.innerHTML = code;
 
@@ -10160,6 +10189,13 @@ Inspector.prototype.addSection = function( name, options )
 
 	if(options.collapsed)
 		element.querySelector(".wsectioncontent").style.display = "none";
+
+	if(options.settings)
+		element.querySelector(".section-settings").addEventListener( 'click', function(e) {
+			e.preventDefault();
+			e.stopPropagation();
+			options.settings(e);
+		});
 
 	this.setCurrentSection( element );
 

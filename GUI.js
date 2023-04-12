@@ -44,8 +44,10 @@ class GUI {
             this.sliders[part+"inspector"] = new LiteGUI.Inspector();
             this.sliders[part+"inspector"].addSection(part);
             this.sliders[part+"inspector"].add("button","", "Add "+ part, { callback: (v) => {
-                console.log(this.global)
-                this.global.test2("clo");
+                this.global.selection_state = "Add "+part;
+                let p_idx = this.global.getPartIdx("Nose");
+                console.log(p_idx,this.global.clone.name);
+                this.global.pick_scene(p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );
            
@@ -54,12 +56,29 @@ class GUI {
     }
 
 
-    addslider() {
+    addslider(slider,morph_idx, target_idx) {
         
-        
-        this.sliders.Chininspector .add("slider", "Chin1", 0, { callback: (v) => {
-            this.global.test3(v);
+        slider.addSlider("Chin1", 0, { callback: (v) => {
+            
+            if( this.global.scene.children[morph_idx].children.length > 0 ){
+                let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
+                this.global.scene.children[morph_idx].children[face_idx].morphTargetInfluences[target_idx]  =  v;
+            }else{
+            this.global.scene.children[morph_idx].morphTargetInfluences[target_idx]  =  v;
+            }
+
         }});
+
+        // slider.add("slider", "Chin1", 0, {min: 0, max: 1, step: 0.01, callback: (v) => {
+            
+        //     if( this.global.scene.children[morph_idx].children.length > 0 ){
+        //         let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
+        //         this.global.scene.children[morph_idx].children[face_idx].morphTargetInfluences[target_idx]  =  v;
+        //     }else{
+        //     this.global.scene.children[morph_idx].morphTargetInfluences[target_idx]  =  v;
+        //     }
+
+        // }});
      //     //let earsSection = this.inspector.sections.find((s) => s.name === "Ears");
     //   console.log(this.inspector);
     //     if (earsSection) {
