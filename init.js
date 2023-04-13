@@ -4,6 +4,8 @@ import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/
 import Stats from './node_modules/three/examples/jsm/libs/stats.module.js';
 import {GLTFLoader} from './node_modules/three/examples/jsm/loaders/GLTFLoader.js';
 //import  *  as GLTFLoader from 'https://cdn.skypack.dev/pin/three@v0.149.0-eN5PpLTGoHq5IPENPwOt/mode=raw/examples/jsm/loaders/GLTFLoader.js';
+import { GLTFExporter } from './node_modules/three/examples/jsm/exporters/GLTFExporter.js';
+
 
 import nose_vertices from './scripts/js/nose_test_3.json' assert { type: "json" };
 import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
@@ -356,19 +358,24 @@ class App{
     }.bind(this) );
     }
 
-    findHead(scene){
-
-        while( ! scene.name.includes("Head")  ){
-            
-            let son_idx = scene.children.findIndex(obj => obj.name.includes("Head"));
-            // if  () scene= scene.children[son_idx]
-            // else scene= scene.children[0]
-            scene = son_idx !=-1 ? scene.children[son_idx] : scene.children[0];					
-        }
-        return scene;
-    }
+    
 
     importAssets(routes){
+
+
+
+        function findHead(scene){
+
+            while( ! scene.name.includes("Head")  ){
+                
+                let son_idx = scene.children.findIndex(obj => obj.name.includes("Head"));
+                // if  () scene= scene.children[son_idx]
+                // else scene= scene.children[0]
+                scene = son_idx !=-1 ? scene.children[son_idx] : scene.children[0];					
+            }
+            return scene;
+        }
+
         //import assets
         const values = Object.values(routes);
         const keys = Object.keys(routes);
@@ -404,7 +411,7 @@ class App{
             let mesh = null;
             this.loader_glb.load( route, function ( gltf ) {
 					
-                let gltf_mesh = this.findHead(gltf.scene);
+                let gltf_mesh = findHead(gltf.scene);
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
                 if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
                 gltf_mesh.name = keys[i]+gltf_mesh.name;
@@ -477,40 +484,89 @@ class App{
         let p_idx = this.getPartIdx(code);
         this.addMorph(sel_obj,vertices,code);
         let tag =  code + " #" + p_idx.part_len;
-        //params[tag] = 0;
         this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx);
-        // folder.add( params, tag, 0, 1 ).step( 0.01 ).onChange( function ( value ) {
-        //     if( this.scene.children[p_idx.morph_idx].children.length > 0 ){
-        //         let face_idx =this.scene.children[p_idx.morph_idx].children.findIndex(obj => obj.name.includes("Face"));
-        //         this.scene.children[p_idx.morph_idx].children[face_idx].morphTargetInfluences[p_idx.target_idx]  =  value;
-        //     }else{
-        //     this.scene.children[p_idx.morph_idx].morphTargetInfluences[p_idx.target_idx]  =  value;
-        //     }
-        // });
-
-        console.log(p_idx.target_idx);
-        console.log(this.scene.children[p_idx.morph_idx]);
         this.selection_state = "idle";
         //return to blend scene
         this.blend_scene();
-        //fn to remove the non main meshes of the scene
     }
 
     checkHead(mesh){
         //function to separate the head (eyes, eyebrows , eyelashes, hair...) from the face mesh 
-        
         if(mesh.name.includes("Head") ) return mesh
         let face_idx =mesh.parent.children.findIndex(obj => obj.name.includes("Face"));
         mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to
         return mesh.parent
     }
 
+
+    getBlend(){
+        let blend_idx =this.scene.children.findIndex(obj => obj.name.includes("Blend"));
+        return this.scene.children[blend_idx];
+    }
+
+    exportGLTF( input ) {
+
+        const link = document.createElement( 'a' );
+        link.style.display = 'none';
+        document.body.appendChild( link ); // Firefox workaround, see #6594
+
+        function save( blob, filename ) {
+
+            link.href = URL.createObjectURL( blob );
+            link.download = filename;
+            link.click();
+        }
+
+        function saveString( text, filename ) {
+            save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+        } 
+
+        const gltfExporter = new GLTFExporter();
+
+        const params2 = {
+            trs: false,
+            onlyVisible: true,
+            binary: false,
+            maxTextureSize: 4096
+        };
+
+        const options = {
+            trs: params2.trs,
+            onlyVisible: params2.onlyVisible,
+            binary: params2.binary,
+            maxTextureSize: params2.maxTextureSize
+        };
+        gltfExporter.parse(
+            input,
+            function ( result ) {
+
+                if ( result instanceof ArrayBuffer ) {
+
+                    saveArrayBuffer( result, 'scene.glb' );
+
+                } else {
+
+                    const output = JSON.stringify( result, null, 2 );
+                    console.log( output );
+                    saveString( output, 'scene.glb' );
+
+                }
+
+            },
+            function ( error ) {
+
+                console.log( 'An error happened during parsing', error );
+
+            },
+            options
+        );
+
+    }
+
     selection_scheduler(sel_obj){
 
         switch (this.selection_state) {
             case "base":
-                
-
                 sel_obj = this.checkHead(sel_obj);
                 this.clone = sel_obj.clone();
                 //move to create clone fn 
@@ -520,6 +576,8 @@ class App{
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
                 this.blend_scene();
+                this.gui.createMorphInspectors();
+                this.gui.createExportBtn();
                 break;
             case "blend":
                 console.log(sel_obj);
@@ -531,46 +589,16 @@ class App{
                 this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"]);
                 break;
             case "Add Nose":
-                console.log("sliderssssss",this.gui.sliders);
                 this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"]);
                 break;
             case "Add Ears":
                 this.blendPart(sel_obj,ears_vertices, "Ears", this.gui.sliders["Earsinspector"]);
                 break;
-            
-            
-        
             default:
                 console.log("default")
                 break;
         }
-
-        // if(selection_state == "base"){
-        // 	console.log(sel_obj);
-            
-        // 	clone = sel_obj.clone();
-        // 	selection_state = "blend"
-        // 	scene.remove(sel_obj);
-
-        // }else if ( selection_state == "blend"){
-
-        // 	clone2 = sel_obj.clone();
-        // 	//scene.remove(sel_obj);
-        // 	selection_state = "hold";
-        // }
-
     }
-
-    test2(b){
-        console.log(b);
-        this.gui.addslider();
-    }
-
-    test3(value){
-
-        console.log("controling", value)
-    }
-
 
 }
 

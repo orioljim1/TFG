@@ -6,11 +6,13 @@ class GUI {
         this.global = global;
 
         this.sliders = {};
+        this.general_inspector = null;
+        this.info_inspector = null;
         this.create(global);
-        
-
+        this.info_panel = null;
+        this.t = null;
     }
-    create(glb) {
+    create() {
         
         //this.global = glb;
         LiteGUI.init(); 
@@ -23,7 +25,19 @@ class GUI {
         this.mainArea.onresize = window.onresize;
         
         this.createSidePanel()
+
+        this.info_inspector = new LiteGUI.Inspector();
+        this.info_panel = this.info_inspector.addInfo(null, "Welcome to the character blending app! Please select the main character you want to work on with the rest of the models ", {id:"ip",color: "red"});
+        this.sidePanel.add(  this.info_inspector); 
+        this.t = this.info_panel;
+        console.log("test", this.info_panel, this);
+        
+    }
+
+    changeInfoPanel(str){
        
+        let bb = document.querySelectorAll('.winfo')[0].innerHTML = str;
+
     }
 
     createSidePanel() {
@@ -34,8 +48,10 @@ class GUI {
         this.sidePanel = docked;
         
         docked.content.id = "main-this.inspector-content";
-        docked.content.style.width = "100%";
+        docked.content.style.width = "100%";              
+    }
 
+    createMorphInspectors(){
         let parts = ["Nose", "Chin", "Ears"];
 
         for (let index = 0; index < parts.length; index++) {
@@ -50,9 +66,18 @@ class GUI {
                 this.global.pick_scene(p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );
-           
         }
-               
+
+        this.changeInfoPanel("Now you can select any part of the face and select the target model you want to do the blending with. Use the sliders to control how much blending you want for each model! :)")
+    }
+
+    createExportBtn(){
+
+        this.general_inspector = new LiteGUI.Inspector();
+        let rBtn = this.general_inspector.addButton(null, "Export Model", { callback: v => {
+            this.global.exportGLTF(this.global.getBlend());
+        }})
+        this.sidePanel.add(  this.general_inspector);
     }
 
 
