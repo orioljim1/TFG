@@ -6,6 +6,22 @@ Parts to offer blending:
 -jaw
 -cheekbones
 
+TODO
+-export model -- done but not new postition array --> ask if what's better option
+-hairs 
+-eyes
+-gui appearing --done
+-loading screen fix
+-
+-gui improvements --> possible	class character
+-full blend mode --> easy to do
+-skin --> add selection 
+-final selection -->
+-final models --> 
+-final head images -->
+-TFG-DOCS!!!!
+
+
 (ears not possible with the assets):
 
 

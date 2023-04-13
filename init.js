@@ -146,7 +146,7 @@ class App{
     getFace(mesh){
         let face_idx =mesh.children.findIndex(obj => obj.name.includes("Face"));
         if(mesh.name.includes("Face") || face_idx == -1 ) return mesh
-        mesh.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
+        //mesh.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
         return mesh.children[face_idx]
     }
 
@@ -156,8 +156,11 @@ class App{
         let morph_idx = this.scene.children.findIndex(obj => obj.name.includes("Blend"));
         let morph = this.scene.children[morph_idx];
 
+
         //fn to select face inside the head object 
         morph = this.getFace(morph);
+        if (morph.morphPartsInfo == undefined ) morph.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]};
+
 
         let source_p = new THREE.Float32BufferAttribute( morph.geometry.attributes.position.array, 3 );
         let source_n = new THREE.Float32BufferAttribute( morph.geometry.attributes.normal.array, 3 );
@@ -173,7 +176,7 @@ class App{
             morph.morphTargetInfluences.push(0);
         }
         morph.morphPartsInfo[type].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
-
+        console.log("MPIIIIIIII", morph.morphPartsInfo);
 
         let mixed_p = this.morph_array_2(source_p,target_p, vertices,type);
         let mixed_n = this.morph_array_2(source_n, target_n, vertices,type);
@@ -231,6 +234,8 @@ class App{
         if(morph.morphTargetInfluences == undefined ) return {part_len: 0, target_idx: 0, morph_idx: morph_idx, names: []};
         let type_array = morph.morphPartsInfo[type];
         const namesArr = morph.morphPartsInfo[type].map(obj => obj.name);
+        console.log("MPPPPPPPPPPPPPIIII", morph.morphPartsInfo);
+
 
         return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr}
     }
@@ -484,7 +489,7 @@ class App{
         let p_idx = this.getPartIdx(code);
         this.addMorph(sel_obj,vertices,code);
         let tag =  code + " #" + p_idx.part_len;
-        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx);
+        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag);
         this.selection_state = "idle";
         //return to blend scene
         this.blend_scene();

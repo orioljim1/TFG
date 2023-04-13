@@ -56,13 +56,11 @@ class GUI {
 
         for (let index = 0; index < parts.length; index++) {
             const part = parts[index];
-
             this.sliders[part+"inspector"] = new LiteGUI.Inspector();
             this.sliders[part+"inspector"].addSection(part);
             this.sliders[part+"inspector"].add("button","", "Add "+ part, { callback: (v) => {
                 this.global.selection_state = "Add "+part;
-                let p_idx = this.global.getPartIdx("Nose");
-                console.log(p_idx,this.global.clone.name);
+                let p_idx = this.global.getPartIdx(part);
                 this.global.pick_scene(p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );
@@ -81,9 +79,9 @@ class GUI {
     }
 
 
-    addslider(slider,morph_idx, target_idx) {
+    addslider(slider,morph_idx, target_idx, tag) {
         
-        slider.addSlider("Chin1", 0, { callback: (v) => {
+        slider.addSlider(tag, 0, { callback: (v) => {
             
             if( this.global.scene.children[morph_idx].children.length > 0 ){
                 let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
