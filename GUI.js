@@ -6,7 +6,7 @@ class GUI {
         this.global = global;
 
         this.sliders = {};
-        this.general_inspector = null;
+        this.general_inspector = new LiteGUI.Inspector();
         this.info_inspector = null;
         this.create(global);
         this.info_panel = null;
@@ -71,7 +71,6 @@ class GUI {
 
     createExportBtn(){
 
-        this.general_inspector = new LiteGUI.Inspector();
         let rBtn = this.general_inspector.addButton(null, "Export Model", { callback: v => {
             this.global.exportGLTF(this.global.getBlend());
         }})
@@ -91,25 +90,22 @@ class GUI {
             }
 
         }});
-
-        // slider.add("slider", "Chin1", 0, {min: 0, max: 1, step: 0.01, callback: (v) => {
-            
-        //     if( this.global.scene.children[morph_idx].children.length > 0 ){
-        //         let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
-        //         this.global.scene.children[morph_idx].children[face_idx].morphTargetInfluences[target_idx]  =  v;
-        //     }else{
-        //     this.global.scene.children[morph_idx].morphTargetInfluences[target_idx]  =  v;
-        //     }
-
-        // }});
-     //     //let earsSection = this.inspector.sections.find((s) => s.name === "Ears");
-    //   console.log(this.inspector);
-    //     if (earsSection) {
-    //       earsSection.addSlider("Slider Label", 50, { min: 0, max: 100 }, (value) => {
-    //         console.log("Slider value: " + value);
-    //       });
-    //     }
      }
+    //addCombo("jdskfhjsd", "current", { values: [], thumbnail: true, callcback: functio(){}})
+    addcombo(values) {
+        
+        console.log("valsss" , values);
+        this.general_inspector.addCombo("Skins", "current", { thumbnail : true,values: values ,callback: v => {
+            console.log("w");
+        }})
+
+        this.general_inspector.addCombo("Skins", "current", { thumbnail : true,values: values ,callback: v => {
+            console.log("w");
+        }})
+        //this.sidePanel.add(  this.general_inspector);
+    }
+
+
 }  
 
 export { GUI };

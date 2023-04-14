@@ -32,6 +32,7 @@ class App{
         this.selection_state = null; // variables to manage the selection processs;
         this.selectedObject = null;
         this.hairs = [];
+        this.skins = [];
         this.loaderGLB = new GLTFLoader();
 
         this.gui = new GUI(this);
@@ -363,11 +364,12 @@ class App{
     }.bind(this) );
     }
 
-    
+    addSkin(material, name){
+        console.log("materiall**",name);
+        this.skins.push({name: name, mat: material});
+    }
 
     importAssets(routes){
-
-
 
         function findHead(scene){
 
@@ -385,30 +387,7 @@ class App{
         const values = Object.values(routes);
         const keys = Object.keys(routes);
         this.loader_glb = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
-       
-        function test(routes){
-
-            const values = Object.values(routes);
-            const keys = Object.keys(routes);
-            const loader_glb = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
-            let me = []
-            console.log(this);
-            for (let i = 0; i < values.length; i++) {
-					
-                let route = values[i];
-                loader_glb.load( route, function ( gltf ) {
-                
-                console.log(gltf.scene);
-                gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
-                //if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
-                gltf_mesh.name = keys[i]+gltf_mesh.name;
-                //scene.add(gltf_mesh);
-                me.push(gltf.scene);
-                //importHairs(gltf_mesh);
-                } );
-            }
-            return me
-        }
+        
 
         for (let i = 0; i < values.length; i++) {
             
@@ -421,8 +400,9 @@ class App{
                 if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
                 gltf_mesh.name = keys[i]+gltf_mesh.name;
                 this.scene.add(gltf_mesh);
-                //characters.push(gltf_mesh);
-                //importHairs(gltf_mesh);
+                let face = this.getFace(gltf_mesh);
+                this.addSkin(face.material,gltf_mesh.name);
+                
             }.bind(this) );
         }
         
@@ -582,6 +562,8 @@ class App{
                 this.scene.remove(sel_obj);
                 this.blend_scene();
                 this.gui.createMorphInspectors();
+                let t = this.skins.map(item => item.name);
+                this.gui.addcombo(t);
                 this.gui.createExportBtn();
                 break;
             case "blend":
