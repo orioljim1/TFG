@@ -7,6 +7,7 @@ class GUI {
 
         this.sliders = {};
         this.general_inspector = new LiteGUI.Inspector();
+        this.skin_inspector = new LiteGUI.Inspector();
         this.info_inspector = null;
         this.create(global);
         this.info_panel = null;
@@ -74,7 +75,31 @@ class GUI {
         let rBtn = this.general_inspector.addButton(null, "Export Model", { callback: v => {
             this.global.exportGLTF(this.global.getBlend());
         }})
+
         this.sidePanel.add(  this.general_inspector);
+    }
+
+    createSkinWidgets(values){
+
+
+        this.skin_inspector.addSection("Skins");
+
+        this.skin_inspector.addCombo("Swap skins", "current", { thumbnail : true,values: values ,callback: v => {
+            this.global.changeSkin(v);
+        }})
+
+        this.skin_inspector.addColor("Color picker", null,{ callback: (v) => {
+            this.global.RGBskin(v);
+        }});
+
+        this.skin_inspector.addButton(null, "Reset Skin", { callback: v => {
+            this.global.resetSkin();
+            console.log("rst");
+        }})
+
+
+        this.sidePanel.add(  this.skin_inspector);
+
     }
 
 
@@ -90,20 +115,7 @@ class GUI {
             }
 
         }});
-     }
-    //addCombo("jdskfhjsd", "current", { values: [], thumbnail: true, callcback: functio(){}})
-    addcombo(values) {
-        
-        console.log("valsss" , values);
-        this.general_inspector.addCombo("Skins", "current", { thumbnail : true,values: values ,callback: v => {
-            console.log("w");
-        }})
-
-        this.general_inspector.addCombo("Skins", "current", { thumbnail : true,values: values ,callback: v => {
-            console.log("w");
-        }})
-        //this.sidePanel.add(  this.general_inspector);
-    }
+     }    
 
 
 }  

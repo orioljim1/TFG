@@ -382,3 +382,49 @@ Inspector.prototype.addCombo = function(name, value, options)
 }
 
 LiteGUI.Slider = Slider;
+
+
+
+LiteGUI.Inspector.prototype.addColorOld = LiteGUI.Inspector.prototype.addColor;
+LiteGUI.Inspector.prototype.addColor = function( name, value, options )
+{
+	options = options || {};
+	var inspector = this;
+
+	var total_width = 100 / this.widgets_per_row;
+	var w = (total_width * 0.9);
+
+	options.width = w + "%";
+
+	inspector.widgets_per_row += 1;
+
+	if(!options.name_width)
+		options.name_width = "40%";
+
+	var widget = inspector.addColorOld( name, value, options );
+	var color_picker_icon = colorPickerTool.icon;
+
+	inspector.addButton( null, "<img src="+color_picker_icon+">", { skip_wchange: true, width: (total_width - w) + "%", callback: inner } );
+
+	inspector.widgets_per_row -= 1;
+
+	function inner(v)
+	{
+		console.log("picker");
+		colorPickerTool.oneClick( inner_color );
+	}
+
+	function inner_color(color)
+	{
+		if(!color)
+			return;
+		console.log(color);
+		widget.setValue(color);
+		RenderModule.requestFrame();
+		//if(options.callback)
+		//	options.callback( color );
+	}
+
+	return widget;
+}
+LiteGUI.Inspector.widget_constructors["color"] = "addColor";

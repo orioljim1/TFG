@@ -83,7 +83,7 @@ class App{
         let dict = {
             "Boss": 'boss_final.glb',
             "Jen": "jen_final.glb",
-            "Cleo": "cleo.glb",
+            "Cleo": "cleo_test.glb",
             "Jack": "jack_g.glb",
             "B2": 'boss_hair_2.glb'
         }
@@ -177,8 +177,7 @@ class App{
             morph.morphTargetInfluences.push(0);
         }
         morph.morphPartsInfo[type].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
-        console.log("MPIIIIIIII", morph.morphPartsInfo);
-
+        
         let mixed_p = this.morph_array_2(source_p,target_p, vertices,type);
         let mixed_n = this.morph_array_2(source_n, target_n, vertices,type);
         let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
@@ -193,39 +192,6 @@ class App{
         this.scene.add(morph);
     }
 
-    Add_chin(){
-        console.log("Please Select Model to add Chin");
-        //fn to load the scene to select the nose
-        this.selection_state = "Add Chin"
-        let p_idx = getPartIdx("Chin");
-        console.log(p_idx,clone.name);
-        pick_scene(p_idx.names);
-
-        setTimeout(this.swap_visibility, 2000); //2s as when models are imported depending on the pc it takes a little bit longer for them to be displayed on the screen
-        selection_state = "base";
-                            
-    }
-
-    Add_Nose(){
-        console.log("Please Select Model to add Nose");
-        //fn to load the scene to select the nose
-        this.selection_state = "Add Nose"
-        let p_idx = getPartIdx("Nose");
-        console.log(p_idx,clone.name);
-        pick_scene(p_idx.names);
-                            
-    }
-
-    Add_Ears(){
-        console.log("Please Select Model to add Nose");
-        //fn to load the scene to select the nose
-        this.selection_state = "Add Ears"
-        let p_idx = getPartIdx("Ears");
-        console.log(p_idx,clone.name);
-        pick_scene(p_idx.names);					
-    }
-
-
     getPartIdx(type){
 
         let morph_idx =this.scene.children.findIndex(obj => obj.name.includes("Blend"));
@@ -234,9 +200,7 @@ class App{
         morph = this.getFace(morph);
         if(morph.morphTargetInfluences == undefined ) return {part_len: 0, target_idx: 0, morph_idx: morph_idx, names: []};
         let type_array = morph.morphPartsInfo[type];
-        const namesArr = morph.morphPartsInfo[type].map(obj => obj.name);
-        console.log("MPPPPPPPPPPPPPIIII", morph.morphPartsInfo);
-
+        const namesArr = morph.morphPartsInfo[type].map(obj => obj.name); 
 
         return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr}
     }
@@ -254,8 +218,7 @@ class App{
 
         let d = this.calculate_distances(source,target,indices);
         let dis = this.getIdxDisp(source,target,indices, parts_dict[type]);
-        console.log("displacements ", dis);
-        
+                
         for (let i = 0; i < indices.length; i++) {
 
             const index = indices[i] *3;										
@@ -301,7 +264,6 @@ class App{
             let dx = source [index] - target[index];
             let dy = source[index+1] - target[index+1];
             let dz = source[index+2] - target[index+2];
-            //console.log("inx", i, dx , dy , dz );
             const distance = Math.sqrt(Math.pow(target_y - dy, 2) + Math.pow(target_z - dz, 2));
             if (distance < closestDistance) {
             closestDistance = distance;
@@ -314,17 +276,12 @@ class App{
         
         }
 
-        console.log("finals ", fx, fy , fz);
-        console.log("finalsdiv ", fx/indices.length, fy/indices.length , fz/indices.length);
-        console.log("closest", closestPoint, indices.length);
-        console.log("closest",dist);
-        //return source
     }
 
     
     add_event(){
     // Add event listener for click event on renderer's DOM element
-    console.log("addd_event", this.selection_state);
+    
     this.renderer.domElement.addEventListener( 'click', function ( event ) {
         
         if(this.selection_state != "finished"){
@@ -365,8 +322,32 @@ class App{
     }
 
     addSkin(material, name){
-        console.log("materiall**",name);
         this.skins.push({name: name, mat: material});
+    }
+
+    changeSkin(skin_name){
+       let blend =  this.getBlend();
+       blend = this.getFace(blend);
+       blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+    }
+
+    RGBskin(v){
+        let blend =  this.getBlend();
+        blend = this.getFace(blend);
+        // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+        blend.material.color.r = v[0];
+        blend.material.color.g= v[1];
+        blend.material.color.b= v[2];
+        
+    }
+
+    resetSkin(){
+        let blend =  this.getBlend();
+        blend = this.getFace(blend);
+        // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+        blend.material.color.r = 1;
+        blend.material.color.g= 1;
+        blend.material.color.b= 1;
     }
 
     importAssets(routes){
@@ -408,11 +389,7 @@ class App{
         
     }
 
-    testb(){
-        console.log("bind");
-        
-    }
-
+  
     importHairs(face){
         let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
         if(hair_idx == -1) return
@@ -438,7 +415,6 @@ class App{
         if (morph_idx == -1) {
         this.clone.position.x = 0;
         this.scene.add(this.clone);
-        console.log(this.scene);
         }else{
             let morph = this.scene.children[morph_idx];	
             morph.visible = true;
@@ -563,11 +539,11 @@ class App{
                 this.blend_scene();
                 this.gui.createMorphInspectors();
                 let t = this.skins.map(item => item.name);
-                this.gui.addcombo(t);
+                //this.gui.addcombo(t);
+                this.gui.createSkinWidgets(t);
                 this.gui.createExportBtn();
                 break;
             case "blend":
-                console.log(sel_obj);
                 this.clone2 = sel_obj.clone();
                 //scene.remove(sel_obj);
                 this.selection_state = "idle";
