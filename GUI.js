@@ -5,9 +5,11 @@ class GUI {
 
         this.global = global;
 
-        this.sliders = {};
+        this.sliders = {}; //to store the blending sliders widgets ( different inspectors)
         this.general_inspector = new LiteGUI.Inspector();
         this.skin_inspector = new LiteGUI.Inspector();
+        this.eyes_inspector = new LiteGUI.Inspector();
+
         this.info_inspector = null;
         this.create(global);
         this.info_panel = null;
@@ -76,6 +78,11 @@ class GUI {
             this.global.exportGLTF(this.global.getBlend());
         }})
 
+        let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
+            this.global.eyesColor([1,0,0]);
+        }})
+
+
         this.sidePanel.add(  this.general_inspector);
     }
 
@@ -88,7 +95,7 @@ class GUI {
             this.global.changeSkin(v);
         }})
 
-        this.skin_inspector.addColor("Color picker", null,{ callback: (v) => {
+        this.skin_inspector.addColor("Color picker", [1,1,1],{ callback: (v) => {
             this.global.RGBskin(v);
         }});
 
@@ -97,8 +104,26 @@ class GUI {
             console.log("rst");
         }})
 
-
         this.sidePanel.add(  this.skin_inspector);
+
+    }
+
+
+    createEyesWidgets(){
+
+
+        this.eyes_inspector.addSection("Eyes");
+
+        this.eyes_inspector.addColor("Color picker", [1,1,1],{ callback: (v) => {
+            this.global.RGBeyes(v);
+        }});
+
+        this.eyes_inspector.addButton(null, "Reset Eyes", { callback: v => {
+            this.global.RGBeyes([1,1,1]);
+            
+        }});
+
+        this.sidePanel.add(  this.eyes_inspector);
 
     }
 

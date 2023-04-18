@@ -84,7 +84,7 @@ class App{
             "Boss": 'boss_final.glb',
             "Jen": "jen_final.glb",
             "Cleo": "cleo_test.glb",
-            "Jack": "jack_g.glb",
+            "Jack": "jack_eyes_tst.glb",
             "B2": 'boss_hair_2.glb'
         }
         this.importAssets(dict);
@@ -321,6 +321,8 @@ class App{
     }.bind(this) );
     }
 
+
+    //Skin customisation 
     addSkin(material, name){
         this.skins.push({name: name, mat: material});
     }
@@ -350,6 +352,33 @@ class App{
         blend.material.color.b= 1;
     }
 
+
+    //Eyes customisation
+    RGBeyes(v){
+
+        function changeEyeColor(v, eye){
+
+            eye.material.color.r = v[0];
+            eye.material.color.g= v[1];
+            eye.material.color.b= v[2];
+        
+        }
+
+        function getEyes(blend){
+            
+            let eye_L =blend.children.findIndex(obj => obj.name.includes("eye_color_L"));
+            let eye_R = blend.children.findIndex(obj => obj.name.includes("eye_color_R"));
+            return [ blend.children[eye_L], blend.children[eye_R]]
+        }
+
+        let blend =  this.getBlend();
+        let eyes = getEyes(blend);
+        changeEyeColor(v, eyes[0]);
+        changeEyeColor(v, eyes[1]);
+
+    }
+
+    
     importAssets(routes){
 
         function findHead(scene){
@@ -541,6 +570,7 @@ class App{
                 let t = this.skins.map(item => item.name);
                 //this.gui.addcombo(t);
                 this.gui.createSkinWidgets(t);
+                this.gui.createEyesWidgets();
                 this.gui.createExportBtn();
                 break;
             case "blend":

@@ -9707,6 +9707,8 @@ Inspector.prototype.addColor = function( name, value, options )
 
 	//create jsColor 
 	var input_element = element.querySelector("input.color");
+	input_element.defaultValue = "1,1,1";
+	input_element.value = "1,1,1";
 	var myColor = null;
 
 	if( window.jscolor )
@@ -9755,6 +9757,7 @@ Inspector.prototype.addColor = function( name, value, options )
 		myColor.pickerBorderColor = "black";
 		myColor.pickerInsetColor = "#222";
 		myColor.rgb_intensity = 1.0;
+		
 
 		if(options.disabled) 
 			myColor.pickerOnfocus = false; //this doesnt work
