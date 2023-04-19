@@ -50,15 +50,35 @@ class App{
 
         this.scene = new THREE.Scene();
            
-        const gridHelper = new THREE.GridHelper( 10, 20, 0xffffff, 0x444444 );
-        this.scene.add( gridHelper );
+        
 
-        const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
-        this.scene.add( ambientLight );
+        // lights
+        // const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
+        // this.scene.add( ambientLight );
 
         const pointLight = new THREE.PointLight( 0xffffff, 0.8 );
         this.scene.add( this.camera );
-        this.camera.add( pointLight );
+        // this.camera.add( pointLight );
+
+        
+        let hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.5 );
+        this.scene.add( hemiLight );
+
+        let dirLight = new THREE.DirectionalLight ( 0xffffff, 0.5 );
+        dirLight.position.set( 3,5,3 );
+        this.scene.add( dirLight );
+
+        //ground & grid
+        let ground = new THREE.Mesh( new THREE.PlaneGeometry( 300, 300 ), new THREE.MeshStandardMaterial( { color: 0x141414, depthWrite: true, roughness: 1, metalness: 0 } ) );
+        ground.rotation.x = -Math.PI / 2;
+        ground.receiveShadow = true;
+        ground.name = "ground";
+        this.scene.add( ground );
+        const gridHelper = new THREE.GridHelper( 10, 20, 0xffffff, 0x444444 );
+        this.scene.add( gridHelper );
+
+        this.scene.background = new THREE.Color( 0xa0a0a0 );
+
 
         this.renderer = new THREE.WebGLRenderer( { antialias: true } );
         this.renderer.outputEncoding = THREE.sRGBEncoding;
@@ -82,8 +102,8 @@ class App{
 
         let dict = {
             "Boss": 'boss_final.glb',
-            "Jen": "jen_final.glb",
-            "Cleo": "cleo_test.glb",
+            "Jen": "jen_v2.glb",
+            "Cleo": "cleo.glb",
             "Jack": "jack_eyes_tst.glb",
             "B2": 'boss_hair_2.glb'
         }
@@ -378,6 +398,55 @@ class App{
 
     }
 
+    RGBHair(v){
+
+        function getHair(blend){
+            let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
+            if (blend.children[hair_idx].type =="Object3D"){
+                return getHair(blend.children[hair_idx])
+            }
+            return blend.children[hair_idx]
+        }
+
+        let blend =  this.getBlend();
+        blend = getHair(blend);
+        // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+        blend.material.color.r = v[0];
+        blend.material.color.g= v[1];
+        blend.material.color.b= v[2];
+        
+    }
+    
+    removeHair(hair_name){
+
+        function getHair(blend){
+            let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
+            return blend.children[hair_idx]
+        }
+        //let name = "Hair"+v;
+
+        let blend =  this.getBlend();
+        let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
+        blend.remove(blend.children[hair_idx]);
+
+        let hair = this.hairs[this.hairs.findIndex(obj => obj.name.includes(hair_name))].hair.clone();
+        if(blend.scale.x < 0){
+            hair.scale.y = 100;
+            hair.scale.z =100;
+            hair.scale.x =100; 
+        }else if (hair_name == "CleoHead"){
+            hair.scale.y = .01;
+            hair.scale.z =.01;
+            hair.scale.x =.01; 
+        }
+        blend.add(hair);    
+
+        // let i = v;
+        console.log(name , this.hairs);
+        
+        
+    }
+
     
     importAssets(routes){
 
@@ -409,29 +478,34 @@ class App{
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
                 if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
                 gltf_mesh.name = keys[i]+gltf_mesh.name;
+                this.importHairs(gltf_mesh, gltf_mesh.name                  );
                 this.scene.add(gltf_mesh);
                 let face = this.getFace(gltf_mesh);
                 this.addSkin(face.material,gltf_mesh.name);
+                
                 
             }.bind(this) );
         }
         
     }
 
-  
-    importHairs(face){
+    testfn(){
+        console.log(this.hairs);
+    }
+
+    importHairs(face, name){
         let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
         if(hair_idx == -1) return
         let hair = face.children[hair_idx];
-        this.hairs.push(hair);
-
+        this.hairs.push({name: name, hair: hair});
     };
+
 
 
     emptyScene(){
         for (let index = (this.scene.children.length -1); index >= 0; index--) {
-            const element = this.scene.children[index];
-            if(element.type == "Mesh" || element.type == "Object3D")this.scene.children[index].visible = false; 
+            const element = this.scene.children[index];    
+            if(element.type == "Object3D" ) this.scene.children[index].visible = false; 
         }
     }
 
@@ -567,10 +641,12 @@ class App{
                 this.scene.remove(sel_obj);
                 this.blend_scene();
                 this.gui.createMorphInspectors();
-                let t = this.skins.map(item => item.name);
+                let s = this.skins.map(item => item.name);
+                let h = this.hairs.map(item => item.name);
                 //this.gui.addcombo(t);
-                this.gui.createSkinWidgets(t);
+                this.gui.createSkinWidgets(s);
                 this.gui.createEyesWidgets();
+                this.gui.createHairWidgets(h);
                 this.gui.createExportBtn();
                 break;
             case "blend":

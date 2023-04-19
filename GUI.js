@@ -9,6 +9,7 @@ class GUI {
         this.general_inspector = new LiteGUI.Inspector();
         this.skin_inspector = new LiteGUI.Inspector();
         this.eyes_inspector = new LiteGUI.Inspector();
+        this.hair_inspector = new LiteGUI.Inspector();
 
         this.info_inspector = null;
         this.create(global);
@@ -79,7 +80,7 @@ class GUI {
         }})
 
         let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
-            this.global.eyesColor([1,0,0]);
+            this.global.removeHair(0);
         }})
 
 
@@ -124,6 +125,30 @@ class GUI {
         }});
 
         this.sidePanel.add(  this.eyes_inspector);
+
+    }
+
+
+    createHairWidgets(values){
+
+
+        this.hair_inspector.addSection("Hair");
+
+
+        this.hair_inspector.addCombo("Swap hairs", "current", { thumbnail : true, values: values ,callback: v => {
+            this.global.removeHair(v);
+        }})
+
+        this.hair_inspector.addColor("Color picker", [1,1,1],{ callback: (v) => {
+            this.global.RGBHair(v);
+        }});
+
+        this.hair_inspector.addButton(null, "Reset Hair", { callback: v => {
+            this.global.RGBHair([1,1,1]);
+            
+        }});
+
+        this.sidePanel.add(  this.hair_inspector);
 
     }
 
