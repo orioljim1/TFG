@@ -153,13 +153,14 @@ class GUI {
     }
 
 
-    addslider(slider,morph_idx, target_idx, tag) {
+    addslider(slider,morph_idx, target_idx, tag, morph) {
         
         slider.addSlider(tag, 0, { callback: (v) => {
             
             if( this.global.scene.children[morph_idx].children.length > 0 ){
-                let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
-                this.global.scene.children[morph_idx].children[face_idx].morphTargetInfluences[target_idx]  =  v;
+                // let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
+                // this.global.scene.children[morph_idx].children[face_idx].morphTargetInfluences[target_idx]  =  v;
+                morph.morphTargetInfluences[target_idx]  =  v;
             }else{
             this.global.scene.children[morph_idx].morphTargetInfluences[target_idx]  =  v;
             }
