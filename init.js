@@ -106,7 +106,7 @@ class App{
             "Cleo": "cleo.glb",
             "Jack": "jack_eyes_tst.glb",
             "B2": 'boss_hair_2.glb',
-            "cleo_body": "cleo_with_body_3.glb"
+            "cleo_body": "cleo_with_body.glb"
         }
         this.importAssets(dict);
         //this.render();
@@ -371,9 +371,9 @@ class App{
         let blend =  this.getBlend();
         blend = this.getFace(blend);
         // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
-        blend.material.color.r = 3*v[0];
-        blend.material.color.g= 3*v[1];
-        blend.material.color.b= 3*v[2];
+        blend.material.color.r =v[0];
+        blend.material.color.g= v[1];
+        blend.material.color.b= v[2];
         
     }
 
@@ -489,7 +489,7 @@ class App{
             this.loader_glb.load( route, function ( gltf ) {
 					
                 let gltf_mesh = gltf.scene
-                if (values[i].includes("cleo_with_body_3") ){//exception for final models with bodies
+                if (values[i].includes("body") ){//exception for final models with bodies
                     gltf_mesh.name = keys[i]+gltf_mesh.name;
                     this.scene.add(gltf_mesh);
 
