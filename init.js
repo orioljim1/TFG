@@ -106,7 +106,8 @@ class App{
             "Cleo": "cleo.glb",
             "Jack": "jack_eyes_tst.glb",
             "B2": 'boss_hair_2.glb',
-            "cleo_body": "cleo_with_body.glb"
+            //"cleo_body": "cleo_with_body.glb",
+            "jack_body": "jack_with_body_2.glb"
         }
         this.importAssets(dict);
         //this.render();
@@ -165,13 +166,13 @@ class App{
         //charactgersGUI(null);	
     }
 
-    getFace(mesh){
-        let face_idx =mesh.children.findIndex(obj => obj.name.includes("Face"));
+    getPart(mesh, part){
+        let face_idx = mesh.children.findIndex(obj => obj.name.includes(part));
         if(mesh.name.includes("Face")) return mesh
         else if (face_idx == -1){
             let head_idx =mesh.children.findIndex(obj => obj.name.includes("Head"));
-            if (head_idx != -1) return this.getFace(mesh.children[head_idx]);
-            return this.getFace(mesh.children[0])
+            if (head_idx != -1) return this.getPart(mesh.children[head_idx],part);
+            return this.getPart(mesh.children[0],part)
         }// body case
         //mesh.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
         return mesh.children[face_idx]
@@ -185,7 +186,7 @@ class App{
 
 
         //fn to select face inside the head object 
-        morph = this.getFace(morph);
+        morph = this.getPart(morph,"Face");
         let face = morph;
         if (morph.morphPartsInfo == undefined ) morph.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]};
 
@@ -225,7 +226,7 @@ class App{
         let morph_idx =this.scene.children.findIndex(obj => obj.name.includes("Blend"));
         if(morph_idx  == -1 ) return {};
         let morph = this.scene.children[morph_idx];
-        morph = this.getFace(morph);
+        morph = this.getPart(morph,"Face");
         if(morph.morphTargetInfluences == undefined ) return {part_len: 0, target_idx: 0, morph_idx: morph_idx, names: []};
         let type_array = morph.morphPartsInfo[type];
         const namesArr = morph.morphPartsInfo[type].map(obj => obj.name); 
@@ -352,7 +353,7 @@ class App{
     //customisations
     getHead(){
         let blend =  this.getBlend();
-        blend = this.getFace(blend);
+        blend = this.getPart(blend,"Face");
         return blend.parent
     }
 
@@ -363,29 +364,22 @@ class App{
 
     changeSkin(skin_name){
        let blend =  this.getBlend();
-       blend = this.getFace(blend);
+       blend = this.getPart(blend,"Face");
        blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
     }
 
     RGBskin(v){
-        let blend =  this.getBlend();
-        blend = this.getFace(blend);
-        // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
-        blend.material.color.r =v[0];
-        blend.material.color.g= v[1];
-        blend.material.color.b= v[2];
-        
-    }
 
-    resetSkin(){
-        let blend =  this.getBlend();
-        blend = this.getFace(blend);
-        // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
-        blend.material.color.r = 1;
-        blend.material.color.g= 1;
-        blend.material.color.b= 1;
+        let parts = ["Face", "Left_Arm", "Right_Arm"]//parts that are included in the skin change
+        for (let i = 0; i < parts.length; i++) {
+            let blend =  this.getBlend();
+            blend = this.getPart(blend, parts[i]);
+            // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+            blend.material.color.r =v[0];
+            blend.material.color.g= v[1];
+            blend.material.color.b= v[2];      
+        }       
     }
-
 
     //Eyes customisation
     RGBeyes(v){
@@ -500,7 +494,7 @@ class App{
                     gltf_mesh.name = keys[i]+gltf_mesh.name;
                     this.importHairs(gltf_mesh, gltf_mesh.name);
                     this.scene.add(gltf_mesh);
-                    let face = this.getFace(gltf_mesh);
+                    let face = this.getPart(gltf_mesh, "Face");
                     this.addSkin(face.material,gltf_mesh.name);
                 }
                 
@@ -661,7 +655,7 @@ class App{
             case "base":
                 //sel_obj = this.checkHead(sel_obj);ç
                 sel_obj = this.getRootGroup(sel_obj);
-                this.clone = sel_obj.clone();
+                this.clone = sel_obj;
                 console.log(sel_obj)
                 //move to create clone fn 
                 this.clone.name = sel_obj.name+"Blend";

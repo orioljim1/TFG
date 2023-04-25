@@ -101,8 +101,7 @@ class GUI {
         }});
 
         this.skin_inspector.addButton(null, "Reset Skin", { callback: v => {
-            this.global.resetSkin();
-            console.log("rst");
+            this.global.RGBskin([1,1,1]);
         }})
 
         this.sidePanel.add(  this.skin_inspector);
