@@ -103,11 +103,12 @@ class App{
         let dict = {
             "Boss": 'boss_final.glb',
             "Jen": "jen_v2.glb",
-            "Cleo": "cleo.glb",
-            "Jack": "jack_eyes_tst.glb",
+            //"Cleo": "cleo.glb",
+            //"Jack": "jack_eyes_tst.glb",
             "B2": 'boss_hair_2.glb',
-            //"cleo_body": "cleo_with_body.glb",
-            "jack_body": "jack_with_body_2.glb"
+            "cleo_body": "cleo_with_body.glb",
+            "jack_body": "jack_with_body.glb",
+            "jen_body": "jen_with_body.glb"
         }
         this.importAssets(dict);
         //this.render();
@@ -418,10 +419,20 @@ class App{
 
         let blend =  this.getHead();
         blend = getHair(blend);
+        //Store the default value of the hair for the fn reset
+        if(!blend.material.default_color){
+            blend.material.default_color = blend.material.color;
+        }
         // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+        if( v == "reset"){
+            blend.material.color.r = blend.material.default_color.r;
+            blend.material.color.g= blend.material.default_color.g;
+            blend.material.color.b= blend.material.default_color.b;
+        }else{
         blend.material.color.r = v[0];
         blend.material.color.g= v[1];
         blend.material.color.b= v[2];
+        }
         
     }
         
@@ -485,6 +496,7 @@ class App{
                 let gltf_mesh = gltf.scene
                 if (values[i].includes("body") ){//exception for final models with bodies
                     gltf_mesh.name = keys[i]+gltf_mesh.name;
+                    gltf_mesh.position.x += .25*(i+1) * (-1)**i;
                     this.scene.add(gltf_mesh);
 
                 }else{
