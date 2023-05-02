@@ -497,12 +497,14 @@ class App{
                 if (values[i].includes("body") ){//exception for final models with bodies
                     gltf_mesh.name = keys[i]+gltf_mesh.name;
                     gltf_mesh.position.x += .25*(i+1) * (-1)**i;
+                    this.importHairs(gltf_mesh, gltf_mesh.name);
                     this.scene.add(gltf_mesh);
+                    let face = this.getPart(gltf_mesh, "Face");
+                    this.addSkin(face.material,gltf_mesh.name);
 
                 }else{
                     gltf_mesh = findHead(gltf_mesh);
                     gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
-                    if(gltf_mesh.type == 'Mesh')gltf_mesh.geometry.computeVertexNormals();
                     gltf_mesh.name = keys[i]+gltf_mesh.name;
                     this.importHairs(gltf_mesh, gltf_mesh.name);
                     this.scene.add(gltf_mesh);
@@ -520,8 +522,10 @@ class App{
     }
 
     importHairs(face, name){
+        if(! face.children) return
         let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
-        if(hair_idx == -1) return
+
+        if(hair_idx == -1) return this.importHairs(face.children[0], name);
         let hair = face.children[hair_idx];
         this.hairs.push({name: name, hair: hair});
     };
