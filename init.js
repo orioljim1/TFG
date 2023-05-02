@@ -522,9 +522,9 @@ class App{
     }
 
     importHairs(face, name){
-        if(! face.children) return
+        if(!face.children.length == 0) return
         let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
-
+        if(!face.children && hair_idx == -1) return
         if(hair_idx == -1) return this.importHairs(face.children[0], name);
         let hair = face.children[hair_idx];
         this.hairs.push({name: name, hair: hair});
