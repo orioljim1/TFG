@@ -517,12 +517,8 @@ class App{
         
     }
 
-    testfn(){
-        console.log(this.hairs);
-    }
-
     importHairs(face, name){
-        if(!face.children.length == 0) return
+        if(face.children.length == 0) return
         let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
         if(!face.children && hair_idx == -1) return
         if(hair_idx == -1) return this.importHairs(face.children[0], name);
