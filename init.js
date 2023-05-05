@@ -108,7 +108,8 @@ class App{
             "B2": 'boss_hair_2.glb',
             "cleo_body": "cleo_with_body.glb",
             "jack_body": "jack_with_body.glb",
-            "jen_body": "jen_with_body.glb"
+            "jen_body": "jen_with_body.glb",
+            "eden_body": "eden_with_body.glb"
         }
         this.importAssets(dict);
         //this.render();
@@ -420,9 +421,9 @@ class App{
         let blend =  this.getHead();
         blend = getHair(blend);
         //Store the default value of the hair for the fn reset
-        if(!blend.material.default_color){
-            blend.material.default_color = blend.material.color;
-        }
+        // if(!blend.material.default_color){
+        //     blend.material.default_color = blend.material.color;
+        // }
         // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
         if( v == "reset"){
             blend.material.color.r = blend.material.default_color.r;
@@ -523,6 +524,13 @@ class App{
         if(!face.children && hair_idx == -1) return
         if(hair_idx == -1) return this.importHairs(face.children[0], name);
         let hair = face.children[hair_idx];
+        //Fill the base colors for the hairs
+        if(hair.children.length >0){//case when hair is composed
+            hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
+            hair = hair.children[hair_idx];
+        }
+        hair.material.default_color = hair.material.color.clone();
+        
         this.hairs.push({name: name, hair: hair});
     };
 

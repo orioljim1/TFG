@@ -143,7 +143,7 @@ class GUI {
         }});
 
         this.hair_inspector.addButton(null, "Reset Hair", { callback: v => {
-            this.global.RGBHair([0.35, 0.56, 1]);
+            this.global.RGBHair("reset");
             
         }});
 
