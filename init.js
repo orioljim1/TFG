@@ -109,7 +109,8 @@ class App{
             "cleo_body": "cleo_with_body.glb",
             "jack_body": "jack_with_body.glb",
             "jen_body": "jen_with_body.glb",
-            "eden_body": "eden_with_body.glb"
+            "eden_body": "eden_with_body.glb",
+            "sakura_body": "sakura_with_body.glb"
         }
         this.importAssets(dict);
         //this.render();
@@ -412,28 +413,33 @@ class App{
 
         function getHair(blend){
             let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
-            if (blend.children[hair_idx].type =="Object3D"){
-                return getHair(blend.children[hair_idx])
-            }
+            // if (blend.children[hair_idx].type =="Object3D"){
+            //     return getHair(blend.children[hair_idx])
+            // }
             return blend.children[hair_idx]
         }
 
-        let blend =  this.getHead();
-        blend = getHair(blend);
-        //Store the default value of the hair for the fn reset
-        // if(!blend.material.default_color){
-        //     blend.material.default_color = blend.material.color;
-        // }
-        // blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
-        if( v == "reset"){
-            blend.material.color.r = blend.material.default_color.r;
-            blend.material.color.g= blend.material.default_color.g;
-            blend.material.color.b= blend.material.default_color.b;
-        }else{
-        blend.material.color.r = v[0];
-        blend.material.color.g= v[1];
-        blend.material.color.b= v[2];
+        function recolourhair(hair, v){
+
+            if( v == "reset"){
+                hair.material.color.r = hair.material.default_color.r;
+                hair.material.color.g= hair.material.default_color.g;
+                hair.material.color.b= hair.material.default_color.b;
+            }else{
+                hair.material.color.r = v[0];
+                hair.material.color.g= v[1];
+                hair.material.color.b= v[2];
+            }
+
         }
+        
+        let blend =  this.getHead();
+        let hair = getHair(blend);
+        for (let i = 0; i < hair.children.length; i++) {
+            let i_hair = hair.children[i];
+            recolourhair(i_hair, v);
+        }
+        
         
     }
         
@@ -526,11 +532,16 @@ class App{
         let hair = face.children[hair_idx];
         //Fill the base colors for the hairs
         if(hair.children.length >0){//case when hair is composed
-            hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
-            hair = hair.children[hair_idx];
+            // hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
+            // hair = hair.children[hair_idx];
+            for (let i = 0; i < hair.children.length; i++) {
+                let i_hair = hair.children[i];
+                i_hair.material.default_color = i_hair.material.color.clone();
+            }
+        }else{
+        hair.material.default_color = hair.material.color.clone();    
         }
-        hair.material.default_color = hair.material.color.clone();
-        
+
         this.hairs.push({name: name, hair: hair});
     };
 
