@@ -80,7 +80,7 @@ class GUI {
         }})
 
         let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
-            this.global.removeHair(0);
+            console.log("tttttt", this.global.vertices);
         }})
 
 

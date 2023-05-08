@@ -7,9 +7,9 @@ import {GLTFLoader} from './node_modules/three/examples/jsm/loaders/GLTFLoader.j
 import { GLTFExporter } from './node_modules/three/examples/jsm/exporters/GLTFExporter.js';
 
 
-import nose_vertices from './scripts/js/nose_test_3.json' assert { type: "json" };
+import nose_vertices from './scripts/js/nose_test_5.json' assert { type: "json" };
 import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
-import ears_vertices from './scripts/js/Ears.json' assert { type: "json" };
+import ears_vertices from './scripts/js/L_ear.json' assert { type: "json" };
 
 
 class App{
@@ -34,13 +34,19 @@ class App{
         this.hairs = [];
         this.skins = [];
         this.loaderGLB = new GLTFLoader();
-
+        this.vertices = null;
         this.gui = new GUI(this);
 
     }
 
     init(){
-        let that = this;
+        fetch("./scripts/js/Ears_2.json")
+        .then(response => {
+        return response.json();
+        })
+        .then(data => this.vertices = data);
+
+        console.log(this.vertices);
         //this.container = document.getElementById( 'container' );
         this.container = document.getElementById("canvasarea");
 
@@ -89,7 +95,7 @@ class App{
 
         this.controls = new OrbitControls( this.camera, this.renderer.domElement );
         this.controls.screenSpacePanning = true;
-        this.controls.minDistance = 1;
+        this.controls.minDistance = .001;
         this.controls.maxDistance = 8000;
         this.controls.target.set( 0, 2, 0 );
         this.controls.update();
@@ -182,7 +188,7 @@ class App{
     }
 
     //functio to adding a morph target into the existing blend
-    addMorph(target ,vertices, type){
+    addMorph(target ,vertices, code,type){
 
         let morph_idx = this.scene.children.findIndex(obj => obj.name.includes("Blend"));
         let morph = this.scene.children[morph_idx];
@@ -200,17 +206,17 @@ class App{
         let target_n = new THREE.Float32BufferAttribute( target.geometry.attributes.normal.array, 3 );
 
                 
-        let name = type + morph.morphPartsInfo[type].length;
+        let name = code + morph.morphPartsInfo[code].length;
         
         if(morph.morphTargetInfluences == undefined) this.initiaizeTargets(morph,name);
         else{ 
             morph.morphTargetDictionary[morph.morphTargetInfluences.length]= name;
             morph.morphTargetInfluences.push(0);
         }
-        morph.morphPartsInfo[type].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
-        
-        let mixed_p = this.morph_array_2(source_p,target_p, vertices,type);
-        let mixed_n = this.morph_array_2(source_n, target_n, vertices,type);
+        morph.morphPartsInfo[code].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
+       
+        let mixed_p = this.morph_array_2(source_p,target_p, vertices, type);
+        let mixed_n = this.morph_array_2(source_n, target_n, vertices, type);
         let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
         let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
 
@@ -241,36 +247,70 @@ class App{
         //function to modify a position array 
 
         let parts_dict= {
-            "Nose": 214 , 	//good enough 
-            "Chin": 45		//1 83 75   
+            "Nose": 2065, 	//good enough 
+            //"Nose": [48, 568, 2700, 4264, 4303],
+            "Chin": 3878,		//1 83 75   
+            "L_ear": 3847,
+            "R_ear":1504
         }
         source = source.array;
         target = target.array
-        indices= indices.vertices;
+        //indices= indices.vertices;
 
-        let d = this.calculate_distances(source,target,indices);
-        let dis = this.getIdxDisp(source,target,indices, parts_dict[type]);
-                
-        for (let i = 0; i < indices.length; i++) {
-
-            const index = indices[i] *3;										
-            source[index] = target[index] ;
-            source[index + 1] = target[index + 1] +dis.dy
-            source[index + 2] = target[index + 2] +dis.dz
+        for (let i = 0; i < type.length; i++) {
+            const type_i = type[i];
+            const indices_i = indices[type_i];
             
+            let dis = this.getIdxDisp_simple(source,target,indices_i, parts_dict[type_i]);
+            
+            for (let i = 0; i < indices_i.length; i++) {
+            const index = indices_i[i] *3;										
+            source[index] = target[index] +dis.dx;
+            source[index + 1] = target[index + 1] +dis.dy;
+            source[index + 2] = target[index + 2] +dis.dz;            
+            }
         }
+
+        // let dis = this.getIdxDisp_simple(source,target,indices, parts_dict[type]);
+        // for (let i = 0; i < indices.length; i++) {
+
+        //     const index = indices[i] *3;										
+        //     source[index] = target[index] +dis.dx;
+        //     source[index + 1] = target[index + 1] +dis.dy;
+        //     source[index + 2] = target[index + 2] +dis.dz;            
+        // }
         
         return source
+    }
+
+    getIdxDisp_simple(source,target,indices, index){
+
+        const i = index *3;	
+        let dx = source [i] - target[i];
+        let dy = source[i+1] - target[i+1];
+        let dz = source[i+2] - target[i+2];
+        return {dx:dx , dy: dy , dz: dz}
     }
 
 
     getIdxDisp(source,target,indices, index){
 
-        const i = indices[index] *3;	
-        let dx = source [i] - target[i];
-        let dy = source[i+1] - target[i+1];
-        let dz = source[i+2] - target[i+2];
-        return {dx:dx , dy: dy , dz: dz}
+        // const i = index *3;	
+        // let dx = source [i] - target[i];
+        // let dy = source[i+1] - target[i+1];
+        // let dz = source[i+2] - target[i+2];
+        let dx = 0;
+        let dy = 0;
+        let dz = 0;
+        // return {dx:dx , dy: dy , dz: dz}
+        for (let j = 0; j < index.length; j++) {
+            const i = index[j]*3;
+            dx += source [i] - target[i];
+            dy += source[i+1] - target[i+1];
+            dz += source[i+2] - target[i+2];
+        }
+        return {dx:dx/index.length , dy: dy/index.length , dz: dz/index.length}
+
     }
 
     calculate_distances(source, target, indices){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
@@ -435,9 +475,13 @@ class App{
         
         let blend =  this.getHead();
         let hair = getHair(blend);
+        if(hair.children.length > 0){
         for (let i = 0; i < hair.children.length; i++) {
             let i_hair = hair.children[i];
             recolourhair(i_hair, v);
+        }
+        }else{
+            recolourhair(hair,v);
         }
         
         
@@ -588,10 +632,10 @@ class App{
         blend.geometry.morphAttributes.normal = [];
     }
 
-    blendPart(sel_obj, vertices,code, folder){
+    blendPart(sel_obj, vertices,code, folder, type){
         console.log("Added", code, " sel_obj", sel_obj);
         let p_idx = this.getPartIdx(code);
-        let mph = this.addMorph(sel_obj,vertices,code);
+        let mph = this.addMorph(sel_obj,vertices,code, type);
         let tag =  code + " #" + p_idx.part_len;
         this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag, mph);
         this.selection_state = "idle";
@@ -710,13 +754,13 @@ class App{
                 this.selection_state = "idle";
                 break;
             case "Add Chin":
-                this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"]);
+                this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"], ["Chin"]);
                 break;
             case "Add Nose":
-                this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"]);
+                this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"], ["Nose"]);
                 break;
             case "Add Ears":
-                this.blendPart(sel_obj,ears_vertices, "Ears", this.gui.sliders["Earsinspector"]);
+                this.blendPart(sel_obj,this.vertices, "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"] );
                 break;
             default:
                 console.log("default")
