@@ -9,7 +9,6 @@ import { GLTFExporter } from './node_modules/three/examples/jsm/exporters/GLTFEx
 
 import nose_vertices from './scripts/js/nose_test_5.json' assert { type: "json" };
 import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
-import ears_vertices from './scripts/js/L_ear.json' assert { type: "json" };
 
 
 class App{
@@ -56,8 +55,6 @@ class App{
 
         this.scene = new THREE.Scene();
            
-        
-
         // lights
         // const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
         // this.scene.add( ambientLight );
@@ -107,11 +104,7 @@ class App{
 
 
         let dict = {
-            "Boss": 'boss_final.glb',
-            "Jen": "jen_v2.glb",
-            //"Cleo": "cleo.glb",
-            //"Jack": "jack_eyes_tst.glb",
-            "B2": 'boss_hair_2.glb',
+            "Boss": 'boss_final_2_body.glb',
             "cleo_body": "cleo_with_body.glb",
             "jack_body": "jack_with_body.glb",
             "jen_body": "jen_with_body.glb",
@@ -168,14 +161,17 @@ class App{
         return true; 
     }
 
+    //fn to change the loading screen to the app screen
     swap_visibility(){
         
         let c = document.getElementById('loading-screen');
         c.classList.toggle('hidden')
-        //charactgersGUI(null);	
+        	
     }
 
+    //fn to retrieve a children of the parent avatar mesh group
     getPart(mesh, part){
+        if ( mesh == undefined ) console.log(mesh, part);
         let face_idx = mesh.children.findIndex(obj => obj.name.includes(part));
         if(mesh.name.includes("Face")) return mesh
         else if (face_idx == -1){
@@ -183,7 +179,6 @@ class App{
             if (head_idx != -1) return this.getPart(mesh.children[head_idx],part);
             return this.getPart(mesh.children[0],part)
         }// body case
-        //mesh.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
         return mesh.children[face_idx]
     }
 
@@ -230,8 +225,9 @@ class App{
         return face;
     }
 
+    //fn to get the info of the current morph targets of a particular part of the face, e.g get all the info for nose morphs
     getPartIdx(type){
-
+        
         let morph_idx =this.scene.children.findIndex(obj => obj.name.includes("Blend"));
         if(morph_idx  == -1 ) return {};
         let morph = this.scene.children[morph_idx];
@@ -243,19 +239,19 @@ class App{
         return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr}
     }
 
-    morph_array_2(source, target, indices, type ){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
+    morph_array_2(source, target, indices, type ){ 
+        //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
         //function to modify a position array 
 
-        let parts_dict= {
-            "Nose": 2065, 	//good enough 
-            //"Nose": [48, 568, 2700, 4264, 4303],
+        let parts_dict= {//dict to store the feature vertices used to calculate the displacements for each of the parts of the face
+            "Nose": 2065,
+            //"Nose": [48, 568, 2700, 4264, 4303], //option of averaging multiple vertices
             "Chin": 3878,		//1 83 75   
             "L_ear": 3847,
             "R_ear":1504
         }
         source = source.array;
         target = target.array
-        //indices= indices.vertices;
 
         for (let i = 0; i < type.length; i++) {
             const type_i = type[i];
@@ -270,20 +266,12 @@ class App{
             source[index + 2] = target[index + 2] +dis.dz;            
             }
         }
-
-        // let dis = this.getIdxDisp_simple(source,target,indices, parts_dict[type]);
-        // for (let i = 0; i < indices.length; i++) {
-
-        //     const index = indices[i] *3;										
-        //     source[index] = target[index] +dis.dx;
-        //     source[index + 1] = target[index + 1] +dis.dy;
-        //     source[index + 2] = target[index + 2] +dis.dz;            
-        // }
         
         return source
     }
 
-    getIdxDisp_simple(source,target,indices, index){
+    //Fn to check for the distance between feature vertices between source and target positions
+    getIdxDisp_simple(source,target, index){
 
         const i = index *3;	
         let dx = source [i] - target[i];
@@ -292,17 +280,12 @@ class App{
         return {dx:dx , dy: dy , dz: dz}
     }
 
+    //Fn to check for multiple vertex and averaging the result
+    getIdxDisp(source,target, index){
 
-    getIdxDisp(source,target,indices, index){
-
-        // const i = index *3;	
-        // let dx = source [i] - target[i];
-        // let dy = source[i+1] - target[i+1];
-        // let dz = source[i+2] - target[i+2];
         let dx = 0;
         let dy = 0;
         let dz = 0;
-        // return {dx:dx , dy: dy , dz: dz}
         for (let j = 0; j < index.length; j++) {
             const i = index[j]*3;
             dx += source [i] - target[i];
@@ -313,10 +296,9 @@ class App{
 
     }
 
-    calculate_distances(source, target, indices){ //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
+    calculate_distances(source, target, indices){ 
+        //better optimized function that iterates the length of the object instead of the mesh which is x50 times smaller
         //function to modify a position array 
-        
-
         //let d = calculate_distances(source,target,indices);
         let fx=0;
         let fy= 0 ;
@@ -393,7 +375,7 @@ class App{
     }.bind(this) );
     }
      
-    //customisations
+    //Fn to retrieve character face mesh
     getHead(){
         let blend =  this.getBlend();
         blend = this.getPart(blend,"Face");
@@ -401,14 +383,16 @@ class App{
     }
 
     //Skin customisation 
-    addSkin(material, name){
-        this.skins.push({name: name, mat: material});
-    }
-
     changeSkin(skin_name){
+
+       let skin =  this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))];
        let blend =  this.getBlend();
-       blend = this.getPart(blend,"Face");
-       blend.material = this.skins[this.skins.findIndex(obj => obj.name.includes(skin_name))].mat;
+       let parts = ["Face", "Left_Arm", "Right_Arm"]//parts that are included in the skin change
+        for (let i = 0; i < parts.length; i++) {
+            
+            let part = this.getPart(blend, parts[i]);
+            part.material = skin[parts[i]];
+        }
     }
 
     RGBskin(v){
@@ -501,15 +485,6 @@ class App{
         blend.remove(blend.children[hair_idx]);
 
         let hair = this.hairs[this.hairs.findIndex(obj => obj.name.includes(hair_name))].hair.clone();
-        if(blend.scale.x < 1){
-            hair.scale.y = 100;
-            hair.scale.z =100;
-            hair.scale.x =100; 
-        }else if (hair_name == "CleoHead"){
-            hair.scale.y = .01;
-            hair.scale.z =.01;
-            hair.scale.x =.01; 
-        }
         hair.position.x = pre_position.x;
         hair.position.y = pre_position.y;
         hair.position.z = pre_position.z;
@@ -545,27 +520,29 @@ class App{
             this.loader_glb.load( route, function ( gltf ) {
 					
                 let gltf_mesh = gltf.scene
-                if (values[i].includes("body") ){//exception for final models with bodies
-                    gltf_mesh.name = keys[i]+gltf_mesh.name;
-                    gltf_mesh.position.x += .25*(i+1) * (-1)**i;
-                    this.importHairs(gltf_mesh, gltf_mesh.name);
-                    this.scene.add(gltf_mesh);
-                    let face = this.getPart(gltf_mesh, "Face");
-                    this.addSkin(face.material,gltf_mesh.name);
-
-                }else{
-                    gltf_mesh = findHead(gltf_mesh);
-                    gltf_mesh.position.x += .25*(i+1) * (-1)**i ;
-                    gltf_mesh.name = keys[i]+gltf_mesh.name;
-                    this.importHairs(gltf_mesh, gltf_mesh.name);
-                    this.scene.add(gltf_mesh);
-                    let face = this.getPart(gltf_mesh, "Face");
-                    this.addSkin(face.material,gltf_mesh.name);
-                }
-                
+            
+                gltf_mesh.name = keys[i]+gltf_mesh.name;
+                gltf_mesh.position.x += .25*(i+1) * (-1)**i;
+                this.importHairs(gltf_mesh, gltf_mesh.name);
+                this.importSkins(gltf_mesh,gltf_mesh.name);
+                this.scene.add(gltf_mesh);
+                               
             }.bind(this) );
         }
         
+    }
+
+    importSkins(mesh, name){
+
+        let skin = {name: name}
+        let parts = ["Face", "Left_Arm", "Right_Arm"]//parts that are included in the skin change
+        for (let i = 0; i < parts.length; i++) {
+            
+            let blend = this.getPart(mesh, parts[i]);
+            skin[parts[i]] = blend.material;
+        }
+        this.skins.push(skin);
+
     }
 
     importHairs(face, name){
@@ -728,40 +705,48 @@ class App{
 
         switch (this.selection_state) {
             case "base":
-                //sel_obj = this.checkHead(sel_obj);ç
+
                 sel_obj = this.getRootGroup(sel_obj);
-                this.clone = sel_obj;
-                console.log(sel_obj)
+                this.clone = sel_obj; //global to store the final mesh we're going to use
+
                 //move to create clone fn 
                 this.clone.name = sel_obj.name+"Blend";
                 this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
+
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
                 this.blend_scene();
                 this.gui.createMorphInspectors();
+
+                //arays of avaliable options
                 let s = this.skins.map(item => item.name);
                 let h = this.hairs.map(item => item.name);
-                //this.gui.addcombo(t);
+
                 this.gui.createSkinWidgets(s);
                 this.gui.createEyesWidgets();
                 this.gui.createHairWidgets(h);
                 this.gui.createExportBtn();
                 break;
+
             case "blend":
                 this.clone2 = sel_obj.clone();
                 //scene.remove(sel_obj);
                 this.selection_state = "idle";
                 break;
+                
             case "Add Chin":
                 this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"], ["Chin"]);
                 break;
+                
             case "Add Nose":
                 this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"], ["Nose"]);
                 break;
+                
             case "Add Ears":
                 this.blendPart(sel_obj,this.vertices, "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"] );
                 break;
+                
             default:
                 console.log("default")
                 break;

@@ -37,10 +37,6 @@
 			import { GUI } from 'three/addons/libs/lil-gui.module.min.js';
 
 
-			import nose_vertices from './scripts/js/Nose_boss.json' assert { type: "json" };
-
-
-
 			let container, stats, clock, controls, material;
 			let camera, scene, renderer, mixer,active_mesh;
 			let meshes = []; // mesh variables
@@ -76,7 +72,7 @@
 				var values = Object.values(mesh_dict);
 				
 				const loader2 = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
-				loader2.load( 'uploads_files_3895009_SAKURA(1).glb', function ( gltf ) {
+				loader2.load( 'uploads_files_3895009_BOSS(1).glb', function ( gltf ) {
 					
 					let gltf_mesh = gltf.scene;
                     console.log("boss", gltf_mesh);
