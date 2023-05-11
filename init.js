@@ -7,7 +7,7 @@ import {GLTFLoader} from './node_modules/three/examples/jsm/loaders/GLTFLoader.j
 import { GLTFExporter } from './node_modules/three/examples/jsm/exporters/GLTFExporter.js';
 
 
-import nose_vertices from './scripts/js/nose_test_5.json' assert { type: "json" };
+import nose_vertices from './scripts/js/nose.json' assert { type: "json" };
 import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
 
 
@@ -213,12 +213,12 @@ class App{
         morph.morphPartsInfo[code].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
        
         let mixed_p = this.morph_array_2(source_p,target_p, vertices, type);
-        let mixed_n = this.morph_array_2(source_n, target_n, vertices, type);
+        //let mixed_n = this.morph_array_2(source_n, target_n, vertices, type);
         let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
-        let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
+        //let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
 
         morph.geometry.morphAttributes.position.push(  mt_p );
-        morph.geometry.morphAttributes.normal.push(  mt_n );  
+        morph.geometry.morphAttributes.normal.push(  source_n );  
 
         morph = this.scene.children[morph_idx];
 
@@ -246,7 +246,7 @@ class App{
         //function to modify a position array 
 
         let parts_dict= {//dict to store the feature vertices used to calculate the displacements for each of the parts of the face
-            "Nose": 2065,
+            "Nose": 2062,
             //"Nose": [48, 568, 2700, 4264, 4303], //option of averaging multiple vertices
             "Chin": 3878,		//1 83 75   
             "L_ear": 3847,
@@ -259,11 +259,11 @@ class App{
             const type_i = type[i];
             const indices_i = indices[type_i];
             
-            let dis = this.getIdxDisp_simple(source,target,indices_i, parts_dict[type_i]);
+            let dis = this.getIdxDisp_simple(source,target, parts_dict[type_i]);
             
             for (let i = 0; i < indices_i.length; i++) {
             const index = indices_i[i] *3;										
-            source[index] = target[index] +dis.dx;
+            source[index] = target[index] ;//+dis.dx no need to displace in x axis, all geoms in x = 0;
             source[index + 1] = target[index + 1] +dis.dy;
             source[index + 2] = target[index + 2] +dis.dz;            
             }
@@ -498,18 +498,6 @@ class App{
     
     importAssets(routes){
 
-        function findHead(scene){
-
-            while( ! scene.name.includes("Head")  ){
-                
-                let son_idx = scene.children.findIndex(obj => obj.name.includes("Head"));
-                // if  () scene= scene.children[son_idx]
-                // else scene= scene.children[0]
-                scene = son_idx !=-1 ? scene.children[son_idx] : scene.children[0];					
-            }
-            return scene;
-        }
-
         //import assets
         const values = Object.values(routes);
         const keys = Object.keys(routes);
@@ -529,7 +517,7 @@ class App{
                 this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
                 this.scene.add(gltf_mesh);
-                console.log(this.scene.children.length);
+                //stop loading screen when all models are loaded
                 if (this.scene.children.length == 11 ) this.swap_visibility();
                               
             }.bind(this) );
