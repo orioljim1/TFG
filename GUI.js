@@ -23,7 +23,7 @@ class GUI {
         this.test ="testtt";
 
         // Create main area
-        this.mainArea = new LiteGUI.Area({id: "mainarea", content_id:"canvasarea", height: "calc( 100% - 31px )", main: true});
+        this.mainArea = new LiteGUI.Area({id: "mainarea", content_id:"canvasarea", height: "calc( 100% - 31px )", main: true, display: "none"});
         LiteGUI.add( this.mainArea );
         
         this.mainArea.onresize = window.onresize;

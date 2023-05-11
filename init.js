@@ -102,7 +102,6 @@ class App{
 
         window.addEventListener( 'resize', this.onWindowResize.bind(this) );
 
-
         let dict = {
             "Boss": 'boss_final_2_body.glb',
             "cleo_body": "cleo_with_body.glb",
@@ -114,7 +113,7 @@ class App{
         this.importAssets(dict);
         //this.render();
         //charactgersGUI(null);	
-        setTimeout(this.swap_visibility, 2000); //2s as when models are imported depending on the pc it takes a little bit longer for them to be displayed on the screen
+        //setTimeout(this.swap_visibility, 2000); //2s as when models are imported depending on the pc it takes a little bit longer for them to be displayed on the screen
         this.selection_state = "base";
         this.animate();
         this.add_event();
@@ -164,6 +163,9 @@ class App{
     //fn to change the loading screen to the app screen
     swap_visibility(){
         
+        let element = document.getElementById("mainarea");
+        element.style.display = "block";
+
         let c = document.getElementById('loading-screen');
         c.classList.toggle('hidden')
         	
@@ -514,6 +516,7 @@ class App{
         this.loader_glb = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
         
 
+
         for (let i = 0; i < values.length; i++) {
             
             let route = values[i];
@@ -526,9 +529,13 @@ class App{
                 this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
                 this.scene.add(gltf_mesh);
-                               
+                console.log(this.scene.children.length);
+                if (this.scene.children.length == 11 ) this.swap_visibility();
+                              
             }.bind(this) );
         }
+
+        
         
     }
 

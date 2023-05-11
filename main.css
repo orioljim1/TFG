@@ -90,7 +90,9 @@ a, button, input, select {
 	padding: 10px;
 }
 
-
+#mainarea {
+	display: none;
+}
 
 .hidden {
 	display: none !important;
