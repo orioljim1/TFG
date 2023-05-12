@@ -56,7 +56,7 @@ class GUI {
     }
 
     createMorphInspectors(){
-        let parts = ["Nose", "Chin", "Ears"];
+        let parts = ["Nose", "Chin", "Ears", "Jaw"];
 
         for (let index = 0; index < parts.length; index++) {
             const part = parts[index];

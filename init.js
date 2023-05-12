@@ -45,7 +45,6 @@ class App{
         })
         .then(data => this.vertices = data);
 
-        console.log(this.vertices);
         //this.container = document.getElementById( 'container' );
         this.container = document.getElementById("canvasarea");
 
@@ -194,7 +193,7 @@ class App{
         //fn to select face inside the head object 
         morph = this.getPart(morph,"Face");
         let face = morph;
-        if (morph.morphPartsInfo == undefined ) morph.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]};
+        if (morph.morphPartsInfo == undefined ) morph.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]};
 
 
         let source_p = new THREE.Float32BufferAttribute( morph.geometry.attributes.position.array, 3 );
@@ -250,7 +249,9 @@ class App{
             //"Nose": [48, 568, 2700, 4264, 4303], //option of averaging multiple vertices
             "Chin": 3878,		//1 83 75   
             "L_ear": 3847,
-            "R_ear":1504
+            "R_ear":1504,
+            "R_jaw":1219,
+            "L_jaw": 4344
         }
         source = source.array;
         target = target.array
@@ -263,7 +264,7 @@ class App{
             
             for (let i = 0; i < indices_i.length; i++) {
             const index = indices_i[i] *3;										
-            source[index] = target[index] ;//+dis.dx no need to displace in x axis, all geoms in x = 0;
+            source[index] = (type.length == 1) ? target[index] :target[index] +dis.dx //Only composite morphs need the x displacement as there's no simetry
             source[index + 1] = target[index + 1] +dis.dy;
             source[index + 2] = target[index + 2] +dis.dz;            
             }
@@ -619,7 +620,7 @@ class App{
         //function to separate the head (eyes, eyebrows , eyelashes, hair...) from the face mesh 
         if(mesh.name.includes("Head") ) return mesh
         let face_idx =mesh.parent.children.findIndex(obj => obj.name.includes("Face"));
-        mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to
+        mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to
         return mesh.parent
     }
 
@@ -706,7 +707,7 @@ class App{
 
                 //move to create clone fn 
                 this.clone.name = sel_obj.name+"Blend";
-                this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[]}; //store each part which morphattribute it corresponds to 
+                this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
 
                 //set scene to have only blend model
@@ -739,7 +740,11 @@ class App{
                 break;
                 
             case "Add Ears":
-                this.blendPart(sel_obj,this.vertices, "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"] );
+                this.blendPart(sel_obj,this.vertices["Ears"], "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"] );
+                break;
+            case "Add Jaw":
+                console.log("addding jaw");
+                this.blendPart(sel_obj,this.vertices["Jaw"], "Jaw" , this.gui.sliders["Jawinspector"],["R_jaw","L_jaw"] );
                 break;
                 
             default:
