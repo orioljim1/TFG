@@ -107,7 +107,8 @@ class App{
             "jack_body": "jack_with_body.glb",
             "jen_body": "jen_with_body.glb",
             "eden_body": "eden_with_body.glb",
-            "sakura_body": "sakura_with_body.glb"
+            "sakura_body": "sakura_with_body.glb",
+            "cleo_hairs": "cleo_hair_test_2.glb"
         }
         this.importAssets(dict);
         //this.render();
@@ -116,6 +117,13 @@ class App{
         this.selection_state = "base";
         this.animate();
         this.add_event();
+    }
+
+    test(blend){
+
+        for (let i = 0; i < blend.children.length; i++) {
+            if ( !blend.children[i].name.includes("Hair")) blend.children.visible = false;
+        }
     }
 
 
@@ -482,16 +490,27 @@ class App{
         }
         //let name = "Hair"+v;
 
-        let blend = this.getHead();
-        let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
-        let pre_position = blend.children[hair_idx].position.clone();
-        blend.remove(blend.children[hair_idx]);
+        // let blend = this.getHead();
+        // let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
+        // let pre_position = blend.children[hair_idx].position.clone();
+        // blend.remove(blend.children[hair_idx]);
 
-        let hair = this.hairs[this.hairs.findIndex(obj => obj.name.includes(hair_name))].hair.clone();
-        hair.position.x = pre_position.x;
-        hair.position.y = pre_position.y;
-        hair.position.z = pre_position.z;
-        blend.add(hair);    
+        // let hair = this.hairs[this.hairs.findIndex(obj => obj.name.includes(hair_name))].hair.clone();
+        // hair.position.x = pre_position.x;
+        // hair.position.y = pre_position.y;
+        // hair.position.z = pre_position.z;
+        // blend.add(hair);    
+      
+
+        for (let i = 0; i < this.hairs.length; i++) {
+            const hair = this.hairs[i];
+            if( hair.name != hair_name){
+                hair.hair.visible = false;
+            }else{
+                hair.hair.visible = true;
+            }
+            
+        }  
       
         
     }
@@ -515,7 +534,7 @@ class App{
             
                 gltf_mesh.name = keys[i]+gltf_mesh.name;
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i;
-                this.importHairs(gltf_mesh, gltf_mesh.name);
+                //this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
                 this.scene.add(gltf_mesh);
                 //stop loading screen when all models are loaded
@@ -697,6 +716,40 @@ class App{
         return child;
     }
 
+    generateHairs(mesh){
+
+
+        function getChildrenByName(object, name) {
+            let childrenArray = [];
+            object.traverse(function(child) {
+              if (child.name.includes(name)) {
+                childrenArray.push(child);
+              }
+            });
+            return childrenArray;
+        }
+        let availiable_hairs = getChildrenByName(mesh,"Hair");
+        console.log("************************",availiable_hairs);
+        for (let i = 0; i < availiable_hairs.length; i++) {
+            const hair = availiable_hairs[i];
+            if ( hair.name != "Hair_jen") hair.visible = false;
+            if(hair.children.length >0){//case when hair is composed
+                // hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
+                // hair = hair.children[hair_idx];
+                for (let i = 0; i < hair.children.length; i++) {
+                    let i_hair = hair.children[i];
+                    i_hair.material.default_color = i_hair.material.color.clone();
+                }
+            }else{
+            hair.material.default_color = hair.material.color.clone();    
+            }
+    
+            this.hairs.push({name: hair.name, hair: hair});
+            
+        }
+
+    }
+
     selection_scheduler(sel_obj){
 
         switch (this.selection_state) {
@@ -709,6 +762,7 @@ class App{
                 this.clone.name = sel_obj.name+"Blend";
                 this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
+                this.generateHairs(this.clone);
 
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
