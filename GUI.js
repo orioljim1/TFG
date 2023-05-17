@@ -80,7 +80,7 @@ class GUI {
         }})
 
         let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
-            this.global.test(this.blobal.clone);
+            this.global.test__2(this.global.getBlend());
         }})
 
 

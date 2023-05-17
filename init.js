@@ -102,13 +102,19 @@ class App{
         window.addEventListener( 'resize', this.onWindowResize.bind(this) );
 
         let dict = {
-            "Boss": 'boss_final_2_body.glb',
-            "cleo_body": "cleo_with_body.glb",
-            "jack_body": "jack_with_body.glb",
-            "jen_body": "jen_with_body.glb",
-            "eden_body": "eden_with_body.glb",
-            "sakura_body": "sakura_with_body.glb",
-            "cleo_hairs": "cleo_hair_test_2.glb"
+            //"Boss": 'boss_final_2_body.glb',
+            //"cleo_body": "cleo_with_body.glb",
+            //"jack_body": "jack_with_body.glb",
+            //"jen_body": "jen_with_body.glb",
+            //"eden_body": "eden_with_body.glb",
+           //"sakura_body": "sakura_with_body.glb",
+            "cleo": "cleo_hairs.glb",
+            "jack": "jack_hairs.glb",
+            "eden": "eden_hairs.glb",
+            "jen": "jen_hairs.glb",
+            "sakura": "sakura_hairs.glb",
+            "boss":"boss_hairs.glb"
+            
         }
         this.importAssets(dict);
         //this.render();
@@ -119,10 +125,11 @@ class App{
         this.add_event();
     }
 
-    test(blend){
+    test__2(blend){
 
+        blend = blend.children[0];
         for (let i = 0; i < blend.children.length; i++) {
-            if ( !blend.children[i].name.includes("Hair")) blend.children.visible = false;
+            if ( !blend.children[i].name.includes("Hair")) blend.children[i].visible = false;
         }
     }
 
@@ -532,7 +539,7 @@ class App{
 					
                 let gltf_mesh = gltf.scene
             
-                gltf_mesh.name = keys[i]+gltf_mesh.name;
+                gltf_mesh.name = keys[i];
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i;
                 //this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
@@ -716,9 +723,9 @@ class App{
         return child;
     }
 
-    generateHairs(mesh){
+    generateHairs(mesh,name){
 
-
+        
         function getChildrenByName(object, name) {
             let childrenArray = [];
             object.traverse(function(child) {
@@ -729,10 +736,10 @@ class App{
             return childrenArray;
         }
         let availiable_hairs = getChildrenByName(mesh,"Hair");
-        console.log("************************",availiable_hairs);
+        console.log(name,"************************",availiable_hairs);
         for (let i = 0; i < availiable_hairs.length; i++) {
             const hair = availiable_hairs[i];
-            if ( hair.name != "Hair_jen") hair.visible = false;
+            if ( hair.name != "Hair_"+name) hair.visible = false;
             if(hair.children.length >0){//case when hair is composed
                 // hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
                 // hair = hair.children[hair_idx];
@@ -759,10 +766,11 @@ class App{
                 this.clone = sel_obj; //global to store the final mesh we're going to use
 
                 //move to create clone fn 
+                this.generateHairs(this.clone,sel_obj.name);
                 this.clone.name = sel_obj.name+"Blend";
                 this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
-                this.generateHairs(this.clone);
+                
 
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
