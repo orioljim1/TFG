@@ -453,14 +453,6 @@ class App{
 
     RGBHair(v){
 
-        function getHair(blend){
-            let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
-            // if (blend.children[hair_idx].type =="Object3D"){
-            //     return getHair(blend.children[hair_idx])
-            // }
-            return blend.children[hair_idx]
-        }
-
         function recolourhair(hair, v){
 
             if( v == "reset"){
@@ -475,8 +467,7 @@ class App{
 
         }
         
-        let blend =  this.getHead();
-        let hair = getHair(blend);
+        let hair = this.hairs.find(item => item.hair.visible === true).hair;
         if(hair.children.length > 0){
         for (let i = 0; i < hair.children.length; i++) {
             let i_hair = hair.children[i];
@@ -485,7 +476,6 @@ class App{
         }else{
             recolourhair(hair,v);
         }
-        
         
     }
         
@@ -543,6 +533,7 @@ class App{
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i;
                 //this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
+                this.generateHairs(gltf_mesh, gltf_mesh.name, false);
                 this.scene.add(gltf_mesh);
                 //stop loading screen when all models are loaded
                 if (this.scene.children.length == 11 ) this.swap_visibility();
@@ -723,7 +714,7 @@ class App{
         return child;
     }
 
-    generateHairs(mesh,name){
+    generateHairs(mesh,name, ismain){
 
         
         function getChildrenByName(object, name) {
@@ -735,8 +726,8 @@ class App{
             });
             return childrenArray;
         }
-        let availiable_hairs = getChildrenByName(mesh,"Hair");
-        console.log(name,"************************",availiable_hairs);
+        let availiable_hairs = getChildrenByName(mesh,"Hair");      
+        
         for (let i = 0; i < availiable_hairs.length; i++) {
             const hair = availiable_hairs[i];
             if ( hair.name != "Hair_"+name) hair.visible = false;
@@ -751,11 +742,11 @@ class App{
             hair.material.default_color = hair.material.color.clone();    
             }
     
-            this.hairs.push({name: hair.name, hair: hair});
+            if ( ismain) this.hairs.push({name: hair.name, hair: hair});
             
         }
-
     }
+
 
     selection_scheduler(sel_obj){
 
@@ -764,9 +755,9 @@ class App{
 
                 sel_obj = this.getRootGroup(sel_obj);
                 this.clone = sel_obj; //global to store the final mesh we're going to use
-
+                let n = sel_obj.name;
                 //move to create clone fn 
-                this.generateHairs(this.clone,sel_obj.name);
+                this.generateHairs(this.clone,sel_obj.name, true);
                 this.clone.name = sel_obj.name+"Blend";
                 this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
@@ -778,8 +769,24 @@ class App{
                 this.gui.createMorphInspectors();
 
                 //arays of avaliable options
-                let s = this.skins.map(item => item.name);
-                let h = this.hairs.map(item => item.name);
+                let s = this.skins.map(item => item.name).sort(function(a, b) {
+                    if (a.includes(n)) {
+                      return -1; // "jen" comes before any other item
+                    } else if (b.includes(n)) {
+                      return 1; // Any other item comes after "jen"
+                    } else {
+                      return a.localeCompare(b); // Sort remaining items in alphabetical order
+                    }
+                  });;
+                let h = this.hairs.map(item => item.name).sort(function(a, b) {
+                    if (a.includes(n)) {
+                      return -1; // "jen" comes before any other item
+                    } else if (b.includes(n)) {
+                      return 1; // Any other item comes after "jen"
+                    } else {
+                      return a.localeCompare(b); // Sort remaining items in alphabetical order
+                    }
+                });;;
 
                 this.gui.createSkinWidgets(s);
                 this.gui.createEyesWidgets();
