@@ -102,24 +102,14 @@ class App{
         window.addEventListener( 'resize', this.onWindowResize.bind(this) );
 
         let dict = {
-            //"Boss": 'boss_final_2_body.glb',
-            //"cleo_body": "cleo_with_body.glb",
-            //"jack_body": "jack_with_body.glb",
-            //"jen_body": "jen_with_body.glb",
-            //"eden_body": "eden_with_body.glb",
-           //"sakura_body": "sakura_with_body.glb",
             "cleo": "cleo_hairs.glb",
             "jack": "jack_hairs.glb",
-            "eden": "eden_hairs.glb",
+            "eden": "eden_final.glb",
             "jen": "jen_hairs.glb",
             "sakura": "sakura_hairs.glb",
-            "boss":"boss_hairs.glb"
-            
+            "boss":"boss_hairs.glb"    
         }
         this.importAssets(dict);
-        //this.render();
-        //charactgersGUI(null);	
-        //setTimeout(this.swap_visibility, 2000); //2s as when models are imported depending on the pc it takes a little bit longer for them to be displayed on the screen
         this.selection_state = "base";
         this.animate();
         this.add_event();
@@ -279,7 +269,7 @@ class App{
             
             for (let i = 0; i < indices_i.length; i++) {
             const index = indices_i[i] *3;										
-            source[index] = (type.length == 1) ? target[index] :target[index] +dis.dx //Only composite morphs need the x displacement as there's no simetry
+            source[index] = target[index] +dis.dx //Only composite morphs need the x displacement as there's no simetry
             source[index + 1] = target[index + 1] +dis.dy;
             source[index + 2] = target[index + 2] +dis.dz;            
             }
@@ -485,20 +475,7 @@ class App{
             let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
             return blend.children[hair_idx]
         }
-        //let name = "Hair"+v;
-
-        // let blend = this.getHead();
-        // let hair_idx =blend.children.findIndex(obj => obj.name.includes("Hair"));
-        // let pre_position = blend.children[hair_idx].position.clone();
-        // blend.remove(blend.children[hair_idx]);
-
-        // let hair = this.hairs[this.hairs.findIndex(obj => obj.name.includes(hair_name))].hair.clone();
-        // hair.position.x = pre_position.x;
-        // hair.position.y = pre_position.y;
-        // hair.position.z = pre_position.z;
-        // blend.add(hair);    
-      
-
+        
         for (let i = 0; i < this.hairs.length; i++) {
             const hair = this.hairs[i];
             if( hair.name != hair_name){
