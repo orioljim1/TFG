@@ -15,6 +15,7 @@ class GUI {
         this.create(global);
         this.info_panel = null;
         this.t = null;
+        this.inspectors = [];
     }
     create() {
         
@@ -40,7 +41,7 @@ class GUI {
 
     changeInfoPanel(str){
        
-        let bb = document.querySelectorAll('.winfo')[0].innerHTML = str;
+        document.querySelectorAll('.winfo')[0].innerHTML = str;
 
     }
 
@@ -61,6 +62,8 @@ class GUI {
         for (let index = 0; index < parts.length; index++) {
             const part = parts[index];
             this.sliders[part+"inspector"] = new LiteGUI.Inspector();
+            this.global.test = this.sliders[part+"inspector"];
+            
             this.sliders[part+"inspector"].addSection(part);
             this.sliders[part+"inspector"].add("button","", "Add "+ part, { callback: (v) => {
                 this.global.selection_state = "Add "+part;
@@ -68,9 +71,34 @@ class GUI {
                 this.global.pick_scene(p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );
+            
+            this.InspectorToggle(this.sliders[part+"inspector"]);
+            
         }
 
         this.changeInfoPanel("Now you can select any part of the face and select the target model you want to do the blending with. Use the sliders to control how much blending you want for each model! :)")
+    }
+
+    InspectorToggle(inspector){
+
+        this.inspectors.push( inspector);
+        let element = inspector.current_section;
+        element.classList.toggle("collapsed");
+        let seccont = element.querySelector(".wsectioncontent");
+        seccont.style.display = seccont.style.display === "none" ? null : "none";    
+        element.sectiontitle.addEventListener("click",function(e) {
+            if(e.target.localName == "button" ) 
+                return;
+            for (let i = 0; i < this.inspectors.length; i++) {
+                let el = this.inspectors[i];
+                el = el.current_section;
+                if (el == element) continue;
+                el.classList.toggle("collapsed");
+                let seccont = el.querySelector(".wsectioncontent");
+                seccont.style.display =  "none";                   
+            }
+                            
+        }.bind(this) );
     }
 
     createExportBtn(){
@@ -80,9 +108,8 @@ class GUI {
         }})
 
         let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
-            this.global.test__2(this.global.getBlend());
+            
         }})
-
 
         this.sidePanel.add(  this.general_inspector);
     }
@@ -106,6 +133,8 @@ class GUI {
 
         this.sidePanel.add(  this.skin_inspector);
 
+        this.InspectorToggle(this.skin_inspector)
+
     }
 
 
@@ -124,6 +153,8 @@ class GUI {
         }});
 
         this.sidePanel.add(  this.eyes_inspector);
+
+        this.InspectorToggle(this.eyes_inspector)
 
     }
 
@@ -148,6 +179,8 @@ class GUI {
         }});
 
         this.sidePanel.add(  this.hair_inspector);
+
+        this.InspectorToggle(this.hair_inspector)
 
     }
 

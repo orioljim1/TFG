@@ -15,7 +15,6 @@ class App{
 
     constructor(){
 
-        this.test = "test";
 
         this.clock = new THREE.Clock();
         this.material = null;
@@ -35,6 +34,7 @@ class App{
         this.loaderGLB = new GLTFLoader();
         this.vertices = null;
         this.gui = new GUI(this);
+        this.test = null;
 
     }
 
