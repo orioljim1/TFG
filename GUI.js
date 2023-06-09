@@ -32,7 +32,7 @@ class GUI {
         this.createSidePanel()
 
         this.info_inspector = new LiteGUI.Inspector();
-        this.info_panel = this.info_inspector.addInfo(null, "Welcome to the character blending app! Please select the main character you want to work on with the rest of the models ", {id:"ip",color: "red"});
+        this.info_panel = this.info_inspector.addInfo(null, "Welcome to the avatar creation app! Please select the main character you want to work on, this character will serve as a base and you will be able to add modifications to it! ", {id:"ip",color: "red"});
         this.sidePanel.add(  this.info_inspector); 
         this.t = this.info_panel;
         console.log("test", this.info_panel, this);
@@ -69,6 +69,7 @@ class GUI {
                 this.global.selection_state = "Add "+part;
                 let p_idx = this.global.getPartIdx(part);
                 this.global.pick_scene(p_idx.names);
+                this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );
             
@@ -185,27 +186,84 @@ class GUI {
     }
 
 
-    addslider(slider,morph_idx, target_idx, tag, morph, helper_sliders) {
+    addslider(slider,morph_idx, target_idx, tag, morph, helper_sliders,code, target_name) {
         
-        slider.addSlider(tag, 0, { callback: (v) => {
+        slider.addSlider(target_name, 0, { callback: function(v) { 
             
+            v *= 0.7;
             if( this.global.scene.children[morph_idx].children.length > 0 ){
-                // let face_idx =this.global.scene.children[morph_idx].children.findIndex(obj => obj.name.includes("Face"));
-                // this.global.scene.children[morph_idx].children[face_idx].morphTargetInfluences[target_idx]  =  v;
                 morph.morphTargetInfluences[target_idx]  =  v;
             }else{
             this.global.scene.children[morph_idx].morphTargetInfluences[target_idx]  =  v;
             }
-            if(helper_sliders != undefined){
+            if(helper_sliders != undefined){ //  this is for multi meshes morph e.g eyes need to morph also eyelashes and eyeballs
             for (let i = 0; i < helper_sliders.length; i++) {
                 let element = helper_sliders[i];
                 element.mesh.morphTargetInfluences[element.idx]= v;
             }}
 
-        }});
+            //Multiple morph correction --> this is done becouse good results are achieved by limiting that all the weights of the morphs sum
+            let p_idx = this.global.getPartIdx(code);
+            let part_array = p_idx.type_array.map(obj => obj.id);
+            let value_sum = 0 ; 
+            for (let i = 0; i < part_array.length; i++) {
+                const element = part_array[i] -1;
+                value_sum +=    morph.morphTargetInfluences[element]; 
+            }
+
+            if(value_sum > 0.7){
+            let sum = 0;
+            for (let i = 0; i < part_array.length; i++) {
+                const element = part_array[i] -1;
+                console.log( element,"    ",morph.morphTargetInfluences[element]);
+                let new_val = Math.min(.7,morph.morphTargetInfluences[element]/value_sum);
+                //if( new_val > .7) new_val *=.7
+                morph.morphTargetInfluences[element] = new_val ; 
+                sum += new_val;
+                console.log( element,"    ",morph.morphTargetInfluences[element]);
+            }
+
+        }}.bind(this)} )
      }    
+
+    displayOptionsDialog(avatars, label)
+    {
+        let values = avatars.map(obj => obj.name)
+        // Create a new dialog
+        let dialog = new LiteGUI.Dialog('Avatar selector', { title:label, close: true, minimize: false, scroll: true, resizable: true, draggable: true });
+        this.mainArea.content.appendChild(dialog.root);
+        dialog.root.style.height = "110%";
+        dialog.root.style.width = "100.3%";
+        dialog.root.style.opacity = "90%";
+
+        // Create a collection of widgets
+        let widgets = new LiteGUI.Inspector();
+        console.log("valssss", values);
+        for(let i = 0; i < values.length; i++){
+            widgets.addImageButton(values[i], null, {
+                type: "image",
+                //image: "data/imgs/thumbnails/" + values[i].toLowerCase() + ".png",
+                image: "./models/images/"+values[i] +".PNG",
+                callback: function(v, e) { 
+                    
+                    dialog.close();
+                    console.log("wwwwww", values[i]);
+                    let avatar = avatars[avatars.findIndex(obj => obj.name.includes(values[i]))].model;
+
+                    this.global.selection_scheduler(avatar,values[i]);
+
+                }.bind(this)
+            } )
+        }
+        dialog.root.classList.add("grid");
+        dialog.add(widgets);
+        dialog.show();
+    }
+
 
 
 }  
+
+
 
 export { GUI };

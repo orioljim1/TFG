@@ -381,7 +381,6 @@ Inspector.prototype.addCombo = function(name, value, options)
 	return element;
 }
 
-LiteGUI.Slider = Slider;
 
 Inspector.prototype.addImageButton = function(name, value, options) 
 {
@@ -415,6 +414,8 @@ Inspector.prototype.addImageButton = function(name, value, options)
 	
 }
 
+
+LiteGUI.Slider = Slider;
 
 
 LiteGUI.Inspector.prototype.addColorOld = LiteGUI.Inspector.prototype.addColor;

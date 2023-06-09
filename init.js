@@ -36,6 +36,7 @@ class App{
         this.vertices = null;
         this.gui = new GUI(this);
         this.test = null;
+        this.avatars = []
 
     }
 
@@ -98,7 +99,7 @@ class App{
         this.controls.update();
 
         this.stats = new Stats();
-        this.container.appendChild( this.stats.dom );
+        //this.container.appendChild( this.stats.dom );
 
         window.addEventListener( 'resize', this.onWindowResize.bind(this) );
 
@@ -173,6 +174,8 @@ class App{
 
         let c = document.getElementById('loading-screen');
         c.classList.toggle('hidden')
+       
+        this.gui.displayOptionsDialog(this.avatars, "Select base avatar!");
         	
     }
 
@@ -310,7 +313,7 @@ class App{
         let type_array = morph.morphPartsInfo[type];
         const namesArr = morph.morphPartsInfo[type].map(obj => obj.name); 
 
-        return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr}
+        return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr, type_array: type_array}
     }
 
     morph_array_2(source, target, indices, type ){ 
@@ -447,7 +450,7 @@ class App{
                 // Set a new material to indicate selection (e.g. red color)
                 //this.selectedObject.material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
 
-                this.selection_scheduler(this.selectedObject);
+                //this.selection_scheduler(this.selectedObject);
             }
         }
     }.bind(this) );
@@ -565,10 +568,11 @@ class App{
         //import assets
         const values = Object.values(routes);
         const keys = Object.keys(routes);
+        //this.avatars = keys;
         this.loader_glb = new GLTFLoader().setPath( './models/gltf/webmorph_models/test old assets/export tests/Final_meshes/' );
         
 
-
+        let counter = 0;
         for (let i = 0; i < values.length; i++) {
             
             let route = values[i];
@@ -581,9 +585,11 @@ class App{
                 //this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
                 this.generateHairs(gltf_mesh, gltf_mesh.name, false);
-                this.scene.add(gltf_mesh);
+                //this.scene.add(gltf_mesh);
+                counter ++;
                 //stop loading screen when all models are loaded
-                if (this.scene.children.length == 11 ) this.swap_visibility();
+                this.avatars.push({name: keys[i],model: gltf_mesh});
+                if (counter >= 6 ) this.swap_visibility();
                               
             }.bind(this) );
         }
@@ -669,13 +675,13 @@ class App{
         blend.geometry.morphAttributes.normal = [];
     }
 
-    blendPart(sel_obj, vertices,code, folder, type){
+    blendPart(sel_obj, vertices,code, folder, type, sel_name){
         //sel obj cleanup
         sel_obj = this.getPart_2(sel_obj,"Face");
         let p_idx = this.getPartIdx(code);
         let mph = this.addMorph(sel_obj,vertices,code, type);
         let tag =  code + " #" + p_idx.part_len;
-        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag, mph.mph, mph.helper_sliders);
+        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag, mph.mph, mph.helper_sliders, code, sel_name);
         this.selection_state = "idle";
         //return to blend scene
         this.blend_scene();
@@ -796,7 +802,7 @@ class App{
     }
 
 
-    selection_scheduler(sel_obj){
+    selection_scheduler(sel_obj, name){
 
         switch (this.selection_state) {
             case "base":
@@ -849,21 +855,21 @@ class App{
                 break;
                 
             case "Add Chin":
-                this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"], ["Chin"]);
+                this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"], ["Chin"], name);
                 break;
                 
             case "Add Nose":
-                this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"], ["Nose"]);
+                this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"], ["Nose"], name);
                 break;
                 
             case "Add Ears":
-                this.blendPart(sel_obj,this.vertices["Ears"], "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"] );
+                this.blendPart(sel_obj,this.vertices["Ears"], "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"], name );
                 break;
             case "Add Jaw":
-                this.blendPart(sel_obj,this.vertices["Jaw"], "Jaw" , this.gui.sliders["Jawinspector"],["R_jaw","L_jaw"] );
+                this.blendPart(sel_obj,this.vertices["Jaw"], "Jaw" , this.gui.sliders["Jawinspector"],["R_jaw","L_jaw"] , name);
                 break;
             case "Add Eyes":
-                this.blendPart(sel_obj,this.vertices["Eyes"], "Eyes" , this.gui.sliders["Eyesinspector"],["L_eye", "R_eye"] );
+                this.blendPart(sel_obj,this.vertices["Eyes"], "Eyes" , this.gui.sliders["Eyesinspector"],["L_eye", "R_eye"], name );
                 break;
                 
             default:
