@@ -9,6 +9,7 @@ import { GLTFExporter } from './node_modules/three/examples/jsm/exporters/GLTFEx
 
 import nose_vertices from './scripts/js/nose.json' assert { type: "json" };
 import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
+import { EqualDepth } from 'three';
 
 
 class App{
@@ -175,11 +176,27 @@ class App{
         	
     }
 
+    getPart_2(mesh, part){
+
+
+        if(mesh.name.includes(part)) return mesh
+        else if(mesh.children.length == 1){return this.getPart_2(mesh.children[0],part )} // case where it's the root object and not armature
+        else{
+            let part_idx =mesh.children.findIndex(obj => obj.name.includes(part));
+            if(part_idx == -1){
+                return this.getPart_2(mesh.parent, part);
+            }else{
+                return mesh.children[part_idx];
+            }
+            
+        }
+
+    }
+
     //fn to retrieve a children of the parent avatar mesh group
     getPart(mesh, part){
-        if ( mesh == undefined ) console.log(mesh, part);
         let face_idx = mesh.children.findIndex(obj => obj.name.includes(part));
-        if(mesh.name.includes("Face")) return mesh
+        if(mesh.name.includes(part)) return mesh
         else if (face_idx == -1){
             let head_idx =mesh.children.findIndex(obj => obj.name.includes("Head"));
             if (head_idx != -1) return this.getPart(mesh.children[head_idx],part);
@@ -198,13 +215,12 @@ class App{
         //fn to select face inside the head object 
         morph = this.getPart(morph,"Face");
         let face = morph;
-        if (morph.morphPartsInfo == undefined ) morph.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]};
+        if (morph.morphPartsInfo == undefined ) morph.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[], "Eyes":[]};
 
 
         let source_p = new THREE.Float32BufferAttribute( morph.geometry.attributes.position.array, 3 );
         let source_n = new THREE.Float32BufferAttribute( morph.geometry.attributes.normal.array, 3 );
         let target_p = new THREE.Float32BufferAttribute( target.geometry.attributes.position.array, 3 );
-        let target_n = new THREE.Float32BufferAttribute( target.geometry.attributes.normal.array, 3 );
 
                 
         let name = code + morph.morphPartsInfo[code].length;
@@ -214,22 +230,74 @@ class App{
             morph.morphTargetDictionary[morph.morphTargetInfluences.length]= name;
             morph.morphTargetInfluences.push(0);
         }
+        
         morph.morphPartsInfo[code].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
-       
-        let mixed_p = this.morph_array_2(source_p,target_p, vertices, type);
-        //let mixed_n = this.morph_array_2(source_n, target_n, vertices, type);
+        let combined =   this.morph_array_2(source_p,target_p, vertices, type);
+        let mixed_p = combined.res;
         let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
-        //let mt_n = new THREE.Float32BufferAttribute(mixed_n, 3 );
 
         morph.geometry.morphAttributes.position.push(  mt_p );
         morph.geometry.morphAttributes.normal.push(  source_n );  
 
         morph = this.scene.children[morph_idx];
+        let helper_sliders;
+        if(code == "Eyes"){
+            let dis = combined.dis ;
+            helper_sliders= this.addEyeMorph(target, morph, dis);
+
+        }
 
         this.scene.remove(morph);
         this.scene.add(morph);
-        return face;
+        return {mph: face, helper_sliders: helper_sliders};
     }
+
+    addEyeMorph(target, source,dis){
+
+
+        function displaced_array(target_array, dis){
+            let L_dis = dis["L_eye"];
+            let R_dis = dis["R_eye"];
+            for (let i = 0; i < target_array.length; i+=3) {
+            const index = i	;
+            if (target_array[index] > 0) dis = L_dis;
+            else dis = R_dis;
+            target_array[index] = target_array[index] +dis.dx
+            target_array[index + 1] = target_array[index + 1] +dis.dy;
+            target_array[index + 2] = target_array[index + 2] +dis.dz;            
+            }
+            return target_array;
+        }
+
+        let eye_meshes = ["Eyelashes", "Eye_L", "eye_color_L", "Eye_R", "eye_color_R"];
+        let sliders = [];
+        
+        for (let i = 0; i < eye_meshes.length; i++) {
+            let element = eye_meshes[i];
+            let target_part = this.getPart_2(target, element);
+            let source_part = this.getPart_2(source, element);
+            let target_p = new THREE.Float32BufferAttribute( target_part.geometry.attributes.position.array, 3 );
+            let target_n = new THREE.Float32BufferAttribute( target_part.geometry.attributes.normal.array, 3 );
+
+            if(source_part.morphTargetInfluences == undefined) this.initiaizeTargets(source_part,"test");
+            else{ 
+                //source_part.morphTargetDictionary[morph.morphTargetInfluences.length]= "test";
+                source_part.morphTargetInfluences.push(0);
+            }
+
+            let target_pp = displaced_array(target_p.array, dis);
+            target_p = new THREE.Float32BufferAttribute( target_pp, 3 );
+
+            source_part.geometry.morphAttributes.position.push(  target_p );
+            source_part.geometry.morphAttributes.normal.push(  target_n );  
+
+            let current_slider = {mesh : source_part, idx :(source_part.morphTargetInfluences.length-1)} ;
+            sliders.push(current_slider);
+            
+
+        }
+        return sliders
+    } 
 
     //fn to get the info of the current morph targets of a particular part of the face, e.g get all the info for nose morphs
     getPartIdx(type){
@@ -250,23 +318,25 @@ class App{
         //function to modify a position array 
 
         let parts_dict= {//dict to store the feature vertices used to calculate the displacements for each of the parts of the face
-            "Nose": 2062,
-            //"Nose": [48, 568, 2700, 4264, 4303], //option of averaging multiple vertices
-            "Chin": 3878,		//1 83 75   
+            "Nose": 3882,
+            "Chin": 3878,
             "L_ear": 3847,
             "R_ear":1504,
             "R_jaw":1219,
-            "L_jaw": 4344
+            "L_jaw": 4344,
+            "L_eye": 3048,
+            "R_eye": 904
         }
         source = source.array;
         target = target.array
 
+        let final_dis = {};
         for (let i = 0; i < type.length; i++) {
             const type_i = type[i];
             const indices_i = indices[type_i];
             
             let dis = this.getIdxDisp_simple(source,target, parts_dict[type_i]);
-            
+            final_dis[type_i] = dis;
             for (let i = 0; i < indices_i.length; i++) {
             const index = indices_i[i] *3;										
             source[index] = target[index] +dis.dx //Only composite morphs need the x displacement as there's no simetry
@@ -275,7 +345,7 @@ class App{
             }
         }
         
-        return source
+        return {res: source, dis: final_dis}
     }
 
     //Fn to check for the distance between feature vertices between source and target positions
@@ -600,11 +670,12 @@ class App{
     }
 
     blendPart(sel_obj, vertices,code, folder, type){
-        console.log("Added", code, " sel_obj", sel_obj);
+        //sel obj cleanup
+        sel_obj = this.getPart_2(sel_obj,"Face");
         let p_idx = this.getPartIdx(code);
         let mph = this.addMorph(sel_obj,vertices,code, type);
         let tag =  code + " #" + p_idx.part_len;
-        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag, mph);
+        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag, mph.mph, mph.helper_sliders);
         this.selection_state = "idle";
         //return to blend scene
         this.blend_scene();
@@ -614,7 +685,7 @@ class App{
         //function to separate the head (eyes, eyebrows , eyelashes, hair...) from the face mesh 
         if(mesh.name.includes("Head") ) return mesh
         let face_idx =mesh.parent.children.findIndex(obj => obj.name.includes("Face"));
-        mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to
+        mesh.parent.children[face_idx].morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[], "Eyes":[]}; //store each part which morphattribute it corresponds to
         return mesh.parent
     }
 
@@ -736,7 +807,7 @@ class App{
                 //move to create clone fn 
                 this.generateHairs(this.clone,sel_obj.name, true);
                 this.clone.name = sel_obj.name+"Blend";
-                this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[]}; //store each part which morphattribute it corresponds to 
+                this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[], "Eyes":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
                 
 
@@ -789,8 +860,10 @@ class App{
                 this.blendPart(sel_obj,this.vertices["Ears"], "Ears" , this.gui.sliders["Earsinspector"],["R_ear","L_ear"] );
                 break;
             case "Add Jaw":
-                console.log("addding jaw");
                 this.blendPart(sel_obj,this.vertices["Jaw"], "Jaw" , this.gui.sliders["Jawinspector"],["R_jaw","L_jaw"] );
+                break;
+            case "Add Eyes":
+                this.blendPart(sel_obj,this.vertices["Eyes"], "Eyes" , this.gui.sliders["Eyesinspector"],["L_eye", "R_eye"] );
                 break;
                 
             default:

@@ -57,7 +57,7 @@ class GUI {
     }
 
     createMorphInspectors(){
-        let parts = ["Nose", "Chin", "Ears", "Jaw"];
+        let parts = ["Nose", "Chin", "Ears", "Jaw", "Eyes"];
 
         for (let index = 0; index < parts.length; index++) {
             const part = parts[index];
@@ -76,7 +76,7 @@ class GUI {
             
         }
 
-        this.changeInfoPanel("Now you can select any part of the face and select the target model you want to do the blending with. Use the sliders to control how much blending you want for each model! :)")
+        this.changeInfoPanel("Now you can select any part of the face and select the target model you want to do the morphing with. Use the sliders to control how much morphing you want for each model! :)")
     }
 
     InspectorToggle(inspector){
@@ -185,7 +185,7 @@ class GUI {
     }
 
 
-    addslider(slider,morph_idx, target_idx, tag, morph) {
+    addslider(slider,morph_idx, target_idx, tag, morph, helper_sliders) {
         
         slider.addSlider(tag, 0, { callback: (v) => {
             
@@ -196,6 +196,11 @@ class GUI {
             }else{
             this.global.scene.children[morph_idx].morphTargetInfluences[target_idx]  =  v;
             }
+            if(helper_sliders != undefined){
+            for (let i = 0; i < helper_sliders.length; i++) {
+                let element = helper_sliders[i];
+                element.mesh.morphTargetInfluences[element.idx]= v;
+            }}
 
         }});
      }    
