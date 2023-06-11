@@ -37,6 +37,7 @@ class App{
         this.gui = new GUI(this);
         this.test = null;
         this.avatars = []
+        this.base_name = null;
 
     }
 
@@ -175,7 +176,7 @@ class App{
         let c = document.getElementById('loading-screen');
         c.classList.toggle('hidden')
        
-        this.gui.displayOptionsDialog(this.avatars, "Select base avatar!");
+        this.gui.displayOptionsDialog(this.avatars, "Select base avatar!",[]);
         	
     }
 
@@ -209,7 +210,7 @@ class App{
     }
 
     //functio to adding a morph target into the existing blend
-    addMorph(target ,vertices, code,type){
+    addMorph(target ,vertices, code,type,sel_name){
 
         let morph_idx = this.scene.children.findIndex(obj => obj.name.includes("Blend"));
         let morph = this.scene.children[morph_idx];
@@ -234,7 +235,7 @@ class App{
             morph.morphTargetInfluences.push(0);
         }
         
-        morph.morphPartsInfo[code].push({id : morph.morphTargetInfluences.length, character: target.name}); //store index of the morph part for the slider to know what morph influence to alter 
+        morph.morphPartsInfo[code].push({id : morph.morphTargetInfluences.length, character: sel_name}); //store index of the morph part for the slider to know what morph influence to alter 
         let combined =   this.morph_array_2(source_p,target_p, vertices, type);
         let mixed_p = combined.res;
         let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
@@ -311,7 +312,7 @@ class App{
         morph = this.getPart(morph,"Face");
         if(morph.morphTargetInfluences == undefined ) return {part_len: 0, target_idx: 0, morph_idx: morph_idx, names: []};
         let type_array = morph.morphPartsInfo[type];
-        const namesArr = morph.morphPartsInfo[type].map(obj => obj.name); 
+        const namesArr = morph.morphPartsInfo[type].map(obj => obj.character); 
 
         return {part_len: type_array.length, target_idx: morph.morphTargetInfluences.length, morph_idx: morph_idx, names: namesArr, type_array: type_array}
     }
@@ -679,12 +680,12 @@ class App{
         //sel obj cleanup
         sel_obj = this.getPart_2(sel_obj,"Face");
         let p_idx = this.getPartIdx(code);
-        let mph = this.addMorph(sel_obj,vertices,code, type);
+        let mph = this.addMorph(sel_obj,vertices,code, type,sel_name);
         let tag =  code + " #" + p_idx.part_len;
-        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, tag, mph.mph, mph.helper_sliders, code, sel_name);
+        this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, sel_name, mph.mph, mph.helper_sliders, code);
         this.selection_state = "idle";
         //return to blend scene
-        this.blend_scene();
+        //this.blend_scene();
     }
 
     checkHead(mesh){
@@ -807,6 +808,7 @@ class App{
         switch (this.selection_state) {
             case "base":
 
+                this.base_name = name;
                 sel_obj = this.getRootGroup(sel_obj);
                 this.clone = sel_obj; //global to store the final mesh we're going to use
                 let n = sel_obj.name;

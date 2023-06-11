@@ -68,7 +68,7 @@ class GUI {
             this.sliders[part+"inspector"].add("button","", "Add "+ part, { callback: (v) => {
                 this.global.selection_state = "Add "+part;
                 let p_idx = this.global.getPartIdx(part);
-                this.global.pick_scene(p_idx.names);
+                //this.global.pick_scene(p_idx.names);
                 this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );
@@ -186,7 +186,7 @@ class GUI {
     }
 
 
-    addslider(slider,morph_idx, target_idx, tag, morph, helper_sliders,code, target_name) {
+    addslider(slider,morph_idx, target_idx, target_name, morph, helper_sliders,code) {
         
         slider.addSlider(target_name, 0, { callback: function(v) { 
             
@@ -226,8 +226,9 @@ class GUI {
         }}.bind(this)} )
      }    
 
-    displayOptionsDialog(avatars, label)
+    displayOptionsDialog(avatars, label, used_avatars)
     {
+        if(used_avatars.length >= (avatars.length -1)) return
         let values = avatars.map(obj => obj.name)
         // Create a new dialog
         let dialog = new LiteGUI.Dialog('Avatar selector', { title:label, close: true, minimize: false, scroll: true, resizable: true, draggable: true });
@@ -240,6 +241,8 @@ class GUI {
         let widgets = new LiteGUI.Inspector();
         console.log("valssss", values);
         for(let i = 0; i < values.length; i++){
+
+            if (values[i] == this.global.base_name || used_avatars.includes(values[i]) ) continue;
             widgets.addImageButton(values[i], null, {
                 type: "image",
                 //image: "data/imgs/thumbnails/" + values[i].toLowerCase() + ".png",
