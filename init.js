@@ -108,23 +108,17 @@ class App{
         window.addEventListener( 'resize', this.onWindowResize.bind(this) );
 
         let dict = {
-            "cleo": "cleo_hairs.glb",
-            "jack": "jen2.glb",
-            "eden": "eden_final.glb",
-            "jen": "jen_hairs.glb",
-            "sakura": "sakura_hairs.glb",
-            "boss":"boss_hairs.glb"    
+            "cleo": "cleo.glb",
+            "jack": "jack.glb",
+            "eden": "eden.glb",
+            "jen": "jen.glb",
+            "sakura": "sakura.glb",
+            "boss":"boss.glb"    
         }
         this.importAssets(dict);
         this.selection_state = "base";
         this.animate();
         this.add_event();
-
-        this.animations.forEach( function ( animation ) {
-
-            animation.play();
-
-        } );
     }
 
     test__2(blend){
@@ -595,22 +589,11 @@ class App{
             this.loader_glb.load( route, function ( gltf ) {
 					
                 let gltf_mesh = gltf.scene
+                let animations = gltf.animations;
+                let mixer = new THREE.AnimationMixer( gltf_mesh );
 
-                if (keys[i] == "jack"){
-                    // let skeleton = new THREE.SkeletonHelper( gltf_mesh );
-                    // skeleton.visible = false;
-                    // this.scene.add( skeleton );
-
-                    
-                    //gltf_mesh = gltf_mesh.children[0];
-
-                    let animations = gltf.animations;
-                    this.mixer = new THREE.AnimationMixer( gltf_mesh );
-    
-                    let idleAction = this.mixer.clipAction( animations[ 0 ] );
-                    this.animations.push(idleAction);
-                }
-
+                let idleAction = mixer.clipAction( animations[ 0 ] );
+                let char_animations = [idleAction];
                 gltf_mesh.name = keys[i];
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i;
                 //this.importHairs(gltf_mesh, gltf_mesh.name);
@@ -619,7 +602,7 @@ class App{
                 //this.scene.add(gltf_mesh);
                 counter ++;
                 //stop loading screen when all models are loaded
-                this.avatars.push({name: keys[i],model: gltf_mesh});
+                this.avatars.push({name: keys[i],model: gltf_mesh, mixer: mixer, char_animations: char_animations});
                 if (counter >= 6 ) this.swap_visibility();
 
                 
@@ -849,8 +832,19 @@ class App{
                 this.clone.name = sel_obj.name+"Blend";
                 this.clone.morphPartsInfo = {"Nose":[], "Chin": [], "Ears":[], "Jaw":[], "Eyes":[]}; //store each part which morphattribute it corresponds to 
                 this.selection_state = "idle";
-                
 
+                //animation 
+                let animation_idx = this.avatars.findIndex(obj => obj.name.includes(name));
+
+                this.mixer = this.avatars[animation_idx].mixer;
+                this.animations = this.avatars[animation_idx].char_animations;
+
+                this.animations.forEach( function ( animation ) {
+
+                    animation.play();
+        
+                } );
+                
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
                 this.blend_scene();

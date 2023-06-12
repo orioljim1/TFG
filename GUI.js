@@ -232,7 +232,7 @@ class GUI {
 
     displayOptionsDialog(avatars, label, used_avatars)
     {
-        if(used_avatars.length >= (avatars.length -1)) return
+       // if(used_avatars.length >= (avatars.length -1)) return
         let values = avatars.map(obj => obj.name)
         // Create a new dialog
         let dialog = new LiteGUI.Dialog('Avatar selector', { title:label, close: true, minimize: false, scroll: true, resizable: true, draggable: true });
