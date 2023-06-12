@@ -103,12 +103,12 @@ class App{
         window.addEventListener( 'resize', this.onWindowResize.bind(this) );
 
         let dict = {
-            "cleo": "cleo.glb",
-            "jack": "jack.glb",
-            "eden": "eden.glb",
-            "jen": "jen.glb",
-            "sakura": "sakura.glb",
-            "boss":"boss.glb"    
+            "Cleo": "cleo.glb",
+            "Jack": "jack.glb",
+            "Eden": "eden.glb",
+            "Jen": "jen.glb",
+            "Sakura": "sakura.glb",
+            "Boss":"boss.glb"    
         }
         this.importAssets(dict);
         this.selection_state = "base";
@@ -736,7 +736,7 @@ class App{
         
         for (let i = 0; i < availiable_hairs.length; i++) {
             const hair = availiable_hairs[i];
-            if ( hair.name != "Hair_"+name) hair.visible = false;
+            if ( hair.name != "Hair_"+name.toLowerCase()) hair.visible = false;
             if(hair.children.length >0){//case when hair is composed
                 // hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
                 // hair = hair.children[hair_idx];

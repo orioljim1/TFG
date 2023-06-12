@@ -8,7 +8,7 @@ class GUI {
         this.sliders = {}; //to store the blending sliders widgets ( different inspectors)
         this.general_inspector = new LiteGUI.Inspector();
         this.skin_inspector = new LiteGUI.Inspector();
-        this.eyes_inspector = new LiteGUI.Inspector();
+        this.eyes_inspector = null;
         this.hair_inspector = new LiteGUI.Inspector();
 
         this.info_inspector = null;
@@ -63,9 +63,9 @@ class GUI {
             const part = parts[index];
             this.sliders[part+"inspector"] = new LiteGUI.Inspector();
             this.global.test = this.sliders[part+"inspector"];
-            
+            if(part == "Eyes") this.eyes_inspector = this.sliders[part+"inspector"]; 
             this.sliders[part+"inspector"].addSection(part);
-            this.sliders[part+"inspector"].add("button","", "Add "+ part, { callback: (v) => {
+            this.sliders[part+"inspector"].add("button","", "Add target", { callback: (v) => {
                 this.global.selection_state = "Add "+part;
                 let p_idx = this.global.getPartIdx(part);
                 this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
@@ -107,12 +107,9 @@ class GUI {
             this.global.exportGLTF(this.global.getBlend());
         }})
 
-        let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
-            this.global.animations.forEach( function ( animation ) {
+        let tb = this.general_inspector.addButton(null, "Reset all", { callback: v => {
+            location.reload()
 
-                animation.play();
-    
-            } );
         }})
 
         this.sidePanel.add(  this.general_inspector);
@@ -144,8 +141,6 @@ class GUI {
 
     createEyesWidgets(){
 
-
-        this.eyes_inspector.addSection("Eyes");
 
         this.eyes_inspector.addColor("Color picker", [1,1,1],{ callback: (v) => {
             this.global.RGBeyes(v);
