@@ -597,3 +597,32 @@ dark mode:
 .colorpicker-window input {
 	border: 0;
 }
+
+#avatarcontainer{
+	display: flex;
+	overflow: scroll;
+    background: var(--global-color-secondary);
+    border-radius: 8px;
+    margin: 10px;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+    align-content: stretch;
+    align-items: center;
+	column-gap:20% ;
+	height: inherit;
+}
+
+.widget.avatarbutt{
+	align-items: stretch;
+    /* vertical-align: top; */
+    min-height: 1.2em;
+    /* user-select: none; */
+    margin-top: 2px;
+    display: flex;
+    flex-direction: column-reverse;
+    flex-wrap: wrap;
+    align-content: stretch;
+    justify-content: space-evenly;
+	scale: 2;	
+}

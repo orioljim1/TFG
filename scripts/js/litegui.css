@@ -303,7 +303,7 @@ display: none;
 }
 
 .inspector .wname {
-	display: inline-block;
+	display: flex;
 	-moz-box-sizing: border-box;
 	-webkit-box-sizing: border-box;
 	box-sizing: border-box;
@@ -321,6 +321,7 @@ display: none;
 	width: 100px;
 	/* margin-top: 3px; */
 	margin-left: 3px;
+	justify-content: center;
 }
 
 .inspector.one_line .wname 
@@ -925,6 +926,7 @@ div {
 .litedialog .content {
 	padding: 12px;
 	/*font-size: 12px;*/
+	height: 90%;
 }
 
 .litepanel, .litedialog {
@@ -2512,4 +2514,8 @@ canvas.slider :hover{
 .section-settings:hover {
 
 	color: #fff;
+}
+
+.ainhoa{
+
 }

@@ -109,7 +109,11 @@ class GUI {
         }})
 
         let tb = this.general_inspector.addButton(null, "testbutton", { callback: v => {
-            
+            this.global.animations.forEach( function ( animation ) {
+
+                animation.play();
+    
+            } );
         }})
 
         this.sidePanel.add(  this.general_inspector);
@@ -244,13 +248,12 @@ class GUI {
 
             if (values[i] == this.global.base_name || used_avatars.includes(values[i]) ) continue;
             widgets.addImageButton(values[i], null, {
+                className: "avatarbutt",
                 type: "image",
-                //image: "data/imgs/thumbnails/" + values[i].toLowerCase() + ".png",
                 image: "./models/images/"+values[i] +".PNG",
                 callback: function(v, e) { 
                     
                     dialog.close();
-                    console.log("wwwwww", values[i]);
                     let avatar = avatars[avatars.findIndex(obj => obj.name.includes(values[i]))].model;
 
                     this.global.selection_scheduler(avatar,values[i]);
@@ -258,6 +261,10 @@ class GUI {
                 }.bind(this)
             } )
         }
+        console.log("******dialog*********", dialog);
+
+        console.log("*********widgests******", widgets);
+        widgets.root.id = "avatarcontainer";
         dialog.root.classList.add("grid");
         dialog.add(widgets);
         dialog.show();

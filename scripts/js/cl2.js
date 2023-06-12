@@ -391,7 +391,7 @@ Inspector.prototype.addImageButton = function(name, value, options)
 
 		switch(options.type) {
 			case 'image': 
-				content = "<img src='" + options.image +"' style='opacity:0.75; max-width: 100px; height:auto'></img>";
+				content = "<img src='" + options.image +"' class= 'ainhoa' style='opacity:0.75; max-width: 100px; height:auto'></img>";
 				
 				break;
 			default: 

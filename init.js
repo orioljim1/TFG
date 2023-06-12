@@ -38,10 +38,13 @@ class App{
         this.test = null;
         this.avatars = []
         this.base_name = null;
+        this.animations= [];
+        this.mixer = null;
 
     }
 
     init(){
+        
         fetch("./scripts/js/Ears_2.json")
         .then(response => {
         return response.json();
@@ -106,7 +109,7 @@ class App{
 
         let dict = {
             "cleo": "cleo_hairs.glb",
-            "jack": "jack_hairs.glb",
+            "jack": "jen2.glb",
             "eden": "eden_final.glb",
             "jen": "jen_hairs.glb",
             "sakura": "sakura_hairs.glb",
@@ -116,6 +119,12 @@ class App{
         this.selection_state = "base";
         this.animate();
         this.add_event();
+
+        this.animations.forEach( function ( animation ) {
+
+            animation.play();
+
+        } );
     }
 
     test__2(blend){
@@ -139,6 +148,12 @@ class App{
 
         requestAnimationFrame( this.animate.bind(this) );
 
+        let mixerUpdateDelta = this.clock.getDelta();
+        if ( this.mixer !== null ) {
+
+            this.mixer.update( mixerUpdateDelta );
+
+        }
         this.render();
         this.stats.update();
 
@@ -148,7 +163,7 @@ class App{
 
         const delta = this.clock.getDelta();
 
-        if ( this.mixer !== undefined ) {
+        if ( this.mixer !== null ) {
 
             //this.mixer.update( delta );
 
@@ -580,7 +595,22 @@ class App{
             this.loader_glb.load( route, function ( gltf ) {
 					
                 let gltf_mesh = gltf.scene
-            
+
+                if (keys[i] == "jack"){
+                    // let skeleton = new THREE.SkeletonHelper( gltf_mesh );
+                    // skeleton.visible = false;
+                    // this.scene.add( skeleton );
+
+                    
+                    //gltf_mesh = gltf_mesh.children[0];
+
+                    let animations = gltf.animations;
+                    this.mixer = new THREE.AnimationMixer( gltf_mesh );
+    
+                    let idleAction = this.mixer.clipAction( animations[ 0 ] );
+                    this.animations.push(idleAction);
+                }
+
                 gltf_mesh.name = keys[i];
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i;
                 //this.importHairs(gltf_mesh, gltf_mesh.name);
@@ -591,6 +621,8 @@ class App{
                 //stop loading screen when all models are loaded
                 this.avatars.push({name: keys[i],model: gltf_mesh});
                 if (counter >= 6 ) this.swap_visibility();
+
+                
                               
             }.bind(this) );
         }
