@@ -68,7 +68,6 @@ class GUI {
             this.sliders[part+"inspector"].add("button","", "Add "+ part, { callback: (v) => {
                 this.global.selection_state = "Add "+part;
                 let p_idx = this.global.getPartIdx(part);
-                //this.global.pick_scene(p_idx.names);
                 this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
             }});
             this.sidePanel.add(  this.sliders[part+"inspector"] );

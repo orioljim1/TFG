@@ -9,13 +9,11 @@ import { GLTFExporter } from './node_modules/three/examples/jsm/exporters/GLTFEx
 
 import nose_vertices from './scripts/js/nose.json' assert { type: "json" };
 import chin_vertices from './scripts/js/chin_vertices.json' assert { type: "json" };
-import { EqualDepth } from 'three';
 
 
 class App{
 
     constructor(){
-
 
         this.clock = new THREE.Clock();
         this.material = null;
@@ -54,15 +52,12 @@ class App{
         //this.container = document.getElementById( 'container' );
         this.container = document.getElementById("canvasarea");
 
-
         this.camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, .1, 1000 );
         this.camera.position.set( 0, 2,  5 );
 
         this.scene = new THREE.Scene();
            
         // lights
-        // const ambientLight = new THREE.AmbientLight( 0xffffff, 0.2 );
-        // this.scene.add( ambientLight );
 
         const pointLight = new THREE.PointLight( 0xffffff, 0.8 );
         this.scene.add( this.camera );
@@ -118,7 +113,7 @@ class App{
         this.importAssets(dict);
         this.selection_state = "base";
         this.animate();
-        this.add_event();
+    
     }
 
     test__2(blend){
@@ -424,48 +419,6 @@ class App{
     }
 
     
-    add_event(){
-    // Add event listener for click event on renderer's DOM element
-    
-    this.renderer.domElement.addEventListener( 'click', function ( event ) {
-        
-        if(this.selection_state != "finished"){
-            // Calculate mouse position in normalized device coordinates
-            const mouse = new THREE.Vector2(); 
-            mouse.x = ( event.clientX / this.renderer.domElement.clientWidth ) * 2 - 1;
-            mouse.y = - ( event.clientY / this.renderer.domElement.clientHeight ) * 2 + 1;
-
-            // Create a raycaster from the camera to the clicked position
-            const raycaster = new THREE.Raycaster();
-            raycaster.setFromCamera( mouse, this.camera );
-
-            // Check for intersections with objects in the scene
-            const intersects = raycaster.intersectObjects( this.scene.children, true );
-
-            // If there are intersections, select the first one
-            if ( intersects.length > 0 && intersects[0].object.type != 'GridHelper' ) {
-
-                // Deselect the previously selected object (if any)
-                if ( this.selectedObject) {
-                    
-                    // Restore the original material
-                    //this.selectedObject.material = material;
-                    this.selectedObject = null;
-                }
-
-                // Select the new object
-                this.selectedObject = intersects[0].object;
-                // Store the original material to restore it later
-                //material = this.selectedObject.material;
-                // Set a new material to indicate selection (e.g. red color)
-                //this.selectedObject.material = new THREE.MeshBasicMaterial( { color: 0xff0000 } );
-
-                //this.selection_scheduler(this.selectedObject);
-            }
-        }
-    }.bind(this) );
-    }
-     
     //Fn to retrieve character face mesh
     getHead(){
         let blend =  this.getBlend();
@@ -596,10 +549,8 @@ class App{
                 let char_animations = [idleAction];
                 gltf_mesh.name = keys[i];
                 gltf_mesh.position.x += .25*(i+1) * (-1)**i;
-                //this.importHairs(gltf_mesh, gltf_mesh.name);
                 this.importSkins(gltf_mesh,gltf_mesh.name);
                 this.generateHairs(gltf_mesh, gltf_mesh.name, false);
-                //this.scene.add(gltf_mesh);
                 counter ++;
                 //stop loading screen when all models are loaded
                 this.avatars.push({name: keys[i],model: gltf_mesh, mixer: mixer, char_animations: char_animations});
@@ -627,29 +578,6 @@ class App{
 
     }
 
-    importHairs(face, name){
-        if(face.children.length == 0) return
-        let hair_idx = face.children.findIndex(obj => obj.name.includes("Hair"));
-        if(!face.children && hair_idx == -1) return
-        if(hair_idx == -1) return this.importHairs(face.children[0], name);
-        let hair = face.children[hair_idx];
-        //Fill the base colors for the hairs
-        if(hair.children.length >0){//case when hair is composed
-            // hair_idx = hair.children.findIndex(obj => obj.name.includes("Hair"));
-            // hair = hair.children[hair_idx];
-            for (let i = 0; i < hair.children.length; i++) {
-                let i_hair = hair.children[i];
-                i_hair.material.default_color = i_hair.material.color.clone();
-            }
-        }else{
-        hair.material.default_color = hair.material.color.clone();    
-        }
-
-        this.hairs.push({name: name, hair: hair});
-    };
-
-
-
     emptyScene(){
         for (let index = (this.scene.children.length -1); index >= 0; index--) {
             const element = this.scene.children[index];    
@@ -672,16 +600,6 @@ class App{
         }
     }
 
-    pick_scene(avalible_char,main_name){
-
-        this.emptyScene();
-
-        for (let index = (this.scene.children.length -1); index >= 0; index--) {
-            const element = this.scene.children[index];
-            if(!avalible_char.includes(element.name) && !element.name.includes(this.clone.name) ) this.scene.children[index].visible = true;
-        }
-    }
-
     initiaizeTargets(blend, name){
 
         blend.morphTargetInfluences = [0];
@@ -696,11 +614,8 @@ class App{
         sel_obj = this.getPart_2(sel_obj,"Face");
         let p_idx = this.getPartIdx(code);
         let mph = this.addMorph(sel_obj,vertices,code, type,sel_name);
-        let tag =  code + " #" + p_idx.part_len;
         this.gui.addslider(folder,p_idx.morph_idx,p_idx.target_idx, sel_name, mph.mph, mph.helper_sliders, code);
         this.selection_state = "idle";
-        //return to blend scene
-        //this.blend_scene();
     }
 
     checkHead(mesh){
@@ -711,13 +626,36 @@ class App{
         return mesh.parent
     }
 
-
     getBlend(){
         let blend_idx =this.scene.children.findIndex(obj => obj.name.includes("Blend"));
         return this.scene.children[blend_idx];
     }
 
+    cleanHairs(){ //fn to remove the unused hairs when exporting the model
+ 
+    function getChildrenByName(object, name) {
+        let childrenArray = [];
+        object.traverse(function(child) {
+            if (child.name.includes(name)) {
+            childrenArray.push(child);
+            }
+        });
+        return childrenArray;
+    }
+    let availiable_hairs = getChildrenByName(mesh,"Hair");      
+    
+    for (let i = 0; i < availiable_hairs.length; i++) {
+        const hair = availiable_hairs[i];
+        if ( hair.visible)  continue;
+        hair.parent.remove(hair);   
+    }
+    }
+
+
     exportGLTF( input ) {
+
+        //input = cleanHairs(input);
+        
 
         const link = document.createElement( 'a' );
         link.style.display = 'none';
@@ -733,21 +671,19 @@ class App{
         function saveString( text, filename ) {
             save( new Blob( [ text ], { type: 'text/plain' } ), filename );
         } 
+        function saveArrayBuffer( buffer, filename ) {
+
+            save( new Blob( [ buffer ], { type: 'application/octet-stream' } ), filename );
+
+        }
 
         const gltfExporter = new GLTFExporter();
 
-        const params2 = {
+        const options = {
             trs: false,
             onlyVisible: true,
-            binary: false,
+            binary: true,
             maxTextureSize: 4096
-        };
-
-        const options = {
-            trs: params2.trs,
-            onlyVisible: params2.onlyVisible,
-            binary: params2.binary,
-            maxTextureSize: params2.maxTextureSize
         };
         gltfExporter.parse(
             input,
@@ -816,7 +752,6 @@ class App{
             
         }
     }
-
 
     selection_scheduler(sel_obj, name){
 
