@@ -244,7 +244,7 @@ class GUI {
             widgets.addImageButton(values[i], null, {
                 className: "avatarbutt",
                 type: "image",
-                image: "./models/images/"+values[i] +".PNG",
+                image: "./models/images/"+values[i].toLowerCase() +".PNG",
                 callback: function(v, e) { 
                     
                     dialog.close();
