@@ -6,10 +6,6 @@ import {GLTFLoader} from '../node_modules/three/examples/jsm/loaders/GLTFLoader.
 import { GLTFExporter } from '../node_modules/three/examples/jsm/exporters/GLTFExporter.js';
 
 
-import nose_vertices from '../data/vertices/nose.json' assert { type: "json" };
-import chin_vertices from '../data/vertices/chin_vertices.json' assert { type: "json" };
-
-
 class App{
 
     constructor(){
@@ -32,7 +28,6 @@ class App{
         this.loaderGLB = new GLTFLoader();
         this.vertices = null;
         this.gui = new GUI(this);
-        this.test = null;
         this.avatars = []
         this.base_name = null;
         this.animations= [];
@@ -42,7 +37,7 @@ class App{
 
     init(){
         
-        fetch("../data/vertices/Ears_2.json")
+        fetch("../data/vertices/Vertices_selection.json")
         .then(response => {
         return response.json();
         })
@@ -250,7 +245,7 @@ class App{
             let target_p = new THREE.Float32BufferAttribute( target_part.geometry.attributes.position.array, 3 );
             let target_n = new THREE.Float32BufferAttribute( target_part.geometry.attributes.normal.array, 3 );
 
-            if(source_part.morphTargetInfluences == undefined) this.initiaizeTargets(source_part,"test");
+            if(source_part.morphTargetInfluences == undefined) this.initiaizeTargets(source_part,"null");
             else{ 
                 source_part.morphTargetInfluences.push(0);
             }
@@ -298,7 +293,8 @@ class App{
     //function to modify a position array     
     morphArray(source, target, indices, type ){ 
 
-        let parts_dict= {//dict to store the feature vertices used to calculate the displacements for each of the parts of the face
+        //dict to store the feature vertices used to calculate the displacements for each of the parts of the face
+        let parts_dict= {
             "Nose": 3882,
             "Chin": 3878,
             "L_ear": 3847,
@@ -695,11 +691,11 @@ class App{
                 break;
                 
             case "Add Chin":
-                this.blendPart(sel_obj,chin_vertices, "Chin", this.gui.sliders["Chininspector"], ["Chin"], name);
+                this.blendPart(sel_obj,this.vertices["Chin"], "Chin", this.gui.sliders["Chininspector"], ["Chin"], name);
                 break;
                 
             case "Add Nose":
-                this.blendPart(sel_obj,nose_vertices, "Nose", this.gui.sliders["Noseinspector"], ["Nose"], name);
+                this.blendPart(sel_obj,this.vertices["Nose"], "Nose", this.gui.sliders["Noseinspector"], ["Nose"], name);
                 break;
                 
             case "Add Ears":
