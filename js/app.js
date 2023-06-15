@@ -48,11 +48,8 @@ class App{
         this.container = document.getElementById("canvasarea");
 
         this.camera = new THREE.PerspectiveCamera( 25, window.innerWidth / window.innerHeight, .3, 1000 );
-        this.camera.position.set( 0, 1.3, 2.438374895577648 );
-        this.camera.rotation.set(-0.06472716954850449,-0.053878009361033874,-0.0034905459553727603);
-        this.camera.rotation._x = -0.06472716954850449;
-        this.camera.rotation._y = -0.053878009361033874;
-        this.camera.rotation._z = -0.0034905459553727603;
+        this.camera.position.set( 0, 2, 3);
+        this.camera.updateProjectionMatrix();
 
         this.scene = new THREE.Scene();
            
@@ -91,7 +88,7 @@ class App{
         this.controls.screenSpacePanning = true;
         this.controls.minDistance = .001;
         this.controls.maxDistance = 8000;
-        this.controls.target.set( 0, 2, 0 );
+        this.controls.target.set( 0, 1.5, 0 );
         this.controls.update();
 
         this.stats = new Stats();
@@ -119,7 +116,7 @@ class App{
 
         new RGBELoader()
         .setPath( './data/models/hdr/')
-        .load( 'studio.hdr', function ( texture ) {
+        .load( 'royal_esplanade_1k.hdr', function ( texture ) {
 
             texture.mapping = THREE.EquirectangularReflectionMapping;
             this.scene.environment = texture;
