@@ -112,8 +112,9 @@ class GUI {
         }})
 
         let tb = this.general_inspector.addButton(null, "Reset all", { callback: v => {
-            location.reload()
-
+            //location.reload()
+            console.log( this.global.camera)
+           console.log( this.global.camera.toJSON())
         }})
 
         this.sidePanel.add(  this.general_inspector);
