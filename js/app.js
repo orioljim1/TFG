@@ -39,7 +39,7 @@ class App{
 
     init(){
         
-        fetch("../data/vertices/Vertices_selection.json")
+        fetch("./data/vertices/Vertices_selection.json")
         .then(response => {
         return response.json();
         })
