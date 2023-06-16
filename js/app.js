@@ -293,7 +293,6 @@ class App{
         blend.geometry.morphAttributes.normal = [];
     }
 
-
     //fn to get the info of the current morph targets of a particular part of the face, e.g get all the info for nose morphs
     getPartIdx(type){
         
@@ -495,7 +494,6 @@ class App{
 
     //fn to manage the avatar's avaliable hairs, sets the hairs to invisible except for the avatars base one
     generateHairs(mesh,name, ismain){
-
         
         function getChildrenByName(object, name) {
             let childrenArray = [];
@@ -676,7 +674,7 @@ class App{
                 this.scene.remove(sel_obj);
                 this.blend_scene();
                 this.gui.createMorphInspectors();
-
+                
                 //arays of avaliable options
                 let s = this.skins.map(item => item.name).sort(function(a, b) {
                     if (a.includes(n)) {
@@ -688,6 +686,7 @@ class App{
                     }
                   });;
                 let h = this.hairs.map(item => item.name).sort(function(a, b) {
+                    n = n.toLowerCase();
                     if (a.includes(n)) {
                       return -1; // "jen" comes before any other item
                     } else if (b.includes(n)) {
