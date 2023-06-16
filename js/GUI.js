@@ -45,10 +45,9 @@ class GUI {
 
     }
 
-
     createSidePanel() {
         this.mainArea.split("horizontal", [null,"300px"], true);
-        let docked = new LiteGUI.Panel("sidePanel", {title: 'Blending Characters', scroll: true, height:'100vh'});
+        let docked = new LiteGUI.Panel("sidePanel", {title: 'Customization tools', scroll: true, height:'100vh'});
         this.mainArea.getSection(1).add( docked );
         $(docked).bind("closed", function() { this.mainArea.merge(); });
         this.sidePanel = docked;
