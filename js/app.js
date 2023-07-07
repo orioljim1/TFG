@@ -216,7 +216,7 @@ class App{
         }
         
         morph.morphPartsInfo[code].push({id : morph.morphTargetInfluences.length, character: sel_name}); //store index of the morph part for the slider to know what morph influence to alter 
-        let combined =   this.morphArray(source_p,target_p, vertices, type);
+        let combined = this.morphArray(source_p,target_p, vertices, type);
         let mixed_p = combined.res;
         let mt_p = new THREE.Float32BufferAttribute( mixed_p, 3 );
 
@@ -567,6 +567,12 @@ class App{
 
     //fn to export and download the model.
     exportGLTF( input ) {
+
+        //transform morph targets into positional array
+        this.removeMorphs(input);
+        this.scene.remove(input);
+        this.scene.add(input);
+        //return;
      
         const link = document.createElement( 'a' );
         link.style.display = 'none';
@@ -621,6 +627,64 @@ class App{
             options
         );
 
+    }
+
+    removeMorphs(input){
+
+        let face = this.getPart(input,"Face");
+        let parent= face.parent;
+        let source= face.geometry.attributes.position.array;
+        let influences = face.morphTargetInfluences;
+        let arrays = face.geometry.morphAttributes.position;
+        for (let i = 0; i < influences.length; i++) {
+            const influence = influences[i];
+            source = this.joinMorph(source, arrays[i].array, influence);
+            influences[i] = 0;
+        }
+        parent.remove(face);
+        face.geometry.setAttribute( 'position', new THREE.BufferAttribute( source, 3 ) );
+        parent.add(face);
+
+        //delete morph influences
+        face.morphTargetInfluences = [];
+        face.morphTargetDictionary = {};
+        face.geometry.morphAttributes.position = [];
+        face.geometry.morphAttributes.position = [];
+        face.geometry.morphAttributes.normal = [];
+        
+    }
+
+    joinMorph(source, target, influence){
+
+        function lerp3D(pointA, pointB, factor) {
+            const x = pointA.x + factor * (pointB.x - pointA.x);
+            const y = pointA.y + factor * (pointB.y - pointA.y);
+            const z = pointA.z + factor * (pointB.z - pointA.z);
+          
+            return { x, y, z };
+        }
+        
+        for (let i = 0; i < source.length; i+=3) {
+            
+            let s = {x: source[i], y: source[i+1],z: source[i+2]};
+            let t = {x: target[i], y: target[i+1],z: target[i+2]};
+            if (s==t)continue;
+            let result = lerp3D(s,t, influence)
+            source[i] = result.x;
+            source[i+1] = result.y;
+            source[i+2] = result.z;
+        }
+
+        return source
+        
+    }
+
+    areEq(a1, a2){
+
+        for (let index = 0; index < a1.length; index++) { 
+        if( a1[index] != a2[index]) return false	
+        }
+        return true 
     }
 
     //fn to retrive the first parent (armature) of an avatar
