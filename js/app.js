@@ -630,28 +630,33 @@ class App{
     }
 
     removeMorphs(input){
+        const parts = ["Face", "Eyelashes", "Eye_L", "eye_color_L", "Eye_R", "eye_color_R"];
+        for (let j = 0; j < parts.length; j++) {
+            const part = parts[j];
+            
+        
+            let face = this.getPart(input,part);
+            let parent= face.parent;
+            let source= face.geometry.attributes.position.array;
+            let influences = face.morphTargetInfluences;
+            let arrays = face.geometry.morphAttributes.position;
+            if(influences == undefined) return;
+            for (let i = 0; i < influences.length; i++) {
+                const influence = influences[i];
+                source = this.joinMorph(source, arrays[i].array, influence);
+                influences[i] = 0;
+            }
+            parent.remove(face);
+            face.geometry.setAttribute( 'position', new THREE.BufferAttribute( source, 3 ) );
+            parent.add(face);
 
-        let face = this.getPart(input,"Face");
-        let parent= face.parent;
-        let source= face.geometry.attributes.position.array;
-        let influences = face.morphTargetInfluences;
-        let arrays = face.geometry.morphAttributes.position;
-        if(influences == undefined) return;
-        for (let i = 0; i < influences.length; i++) {
-            const influence = influences[i];
-            source = this.joinMorph(source, arrays[i].array, influence);
-            influences[i] = 0;
+            //delete morph influences
+            face.morphTargetInfluences = [];
+            face.morphTargetDictionary = {};
+            face.geometry.morphAttributes.position = [];
+            face.geometry.morphAttributes.position = [];
+            face.geometry.morphAttributes.normal = [];
         }
-        parent.remove(face);
-        face.geometry.setAttribute( 'position', new THREE.BufferAttribute( source, 3 ) );
-        parent.add(face);
-
-        //delete morph influences
-        face.morphTargetInfluences = [];
-        face.morphTargetDictionary = {};
-        face.geometry.morphAttributes.position = [];
-        face.geometry.morphAttributes.position = [];
-        face.geometry.morphAttributes.normal = [];
         
     }
 
