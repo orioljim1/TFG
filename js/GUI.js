@@ -10,7 +10,7 @@ class GUI {
         this.hair_inspector = new LiteGUI.Inspector();
 
         this.info_inspector = null;
-        this.create(global);
+        this.create();
         this.info_panel = null;
         this.t = null;
         this.inspectors = [];

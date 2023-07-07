@@ -1,4 +1,4 @@
-import { GUI } from './GUI.js'
+import { GUI } from './GUI_lex.js'
 import * as THREE from '../node_modules/three/build/three.module.js';
 import { OrbitControls } from 'https://cdn.skypack.dev/three@0.136/examples/jsm/controls/OrbitControls.js';
 import Stats from '../node_modules/three/examples/jsm/libs/stats.module.js';
