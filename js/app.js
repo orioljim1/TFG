@@ -636,6 +636,7 @@ class App{
         let source= face.geometry.attributes.position.array;
         let influences = face.morphTargetInfluences;
         let arrays = face.geometry.morphAttributes.position;
+        if(influences == undefined) return;
         for (let i = 0; i < influences.length; i++) {
             const influence = influences[i];
             source = this.joinMorph(source, arrays[i].array, influence);
