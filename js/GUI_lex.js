@@ -4,10 +4,10 @@ class GUI {
     
         this.global = global;
         this.sliders = {}; //to store the blending sliders widgets ( different inspectors)
-        this.general_inspector = new LiteGUI.Inspector();
-        this.skin_inspector = new LiteGUI.Inspector();
+        this.general_inspector = null //new LiteGUI.Inspector();
+        this.skin_inspector = null //new LiteGUI.Inspector();
         this.eyes_inspector = null;
-        this.hair_inspector = new LiteGUI.Inspector();
+        this.hair_inspector = null //new LiteGUI.Inspector();
 
         this.info_inspector = null;
         this.create();
@@ -45,9 +45,134 @@ class GUI {
         //right.add(docked);  
         $(docked).bind("closed", function() { this.mainArea.merge(); });
         this.sidePanel = docked;
+        //this.sidePanel.branch("Morph");
+
+        // var side_bottom_panel = rbottom.addPanel();
+        // fillRightBottomPanel( side_bottom_panel, 'Vertical' );
+        this.createMorphTabs(this.sidePanel);
+        this.sidePanel.tab("Another tab");
+        this.sidePanel.addButton(null, "Click me, Im Full Width...");
         
+        const branch = null//this.sidePanel.current_branch;
+        this.sidePanel.tab("tab2");
+        this.sidePanel.addDropdown("Best Engine", ["Godot", "Unity", "Unreal Engine"], "Godot", (value, event) => {
+
+            this.sidePanel.queuedContainer = branch;
+            this.sidePanel.addButton();
+            delete this.sidePanel.queuedContainer;
+            console.log(value);
+        });
+
+        this.sidePanel.merge();
+        //console.log(this.sidePanel.branches[0].addButton());
+
         //docked.content.id = "main-this.inspector-content";
         //docked.content.style.width = "100%";              
+    }
+
+
+
+    createMorphTabs(panel){
+
+
+        panel.clear();
+
+        panel.branch("Morph", {icon: "fa-solid fa-table-list"});
+
+
+        // let parts = ["Nose", "Chin", "Ears", "Jaw", "Eyes"];
+        // let tabs = {}
+
+        // for (let index = 0; index < parts.length; index++) {
+        //     const part = parts[index];
+        //     //this.sliders[part+"inspector"] = new LiteGUI.Inspector();
+        //     let tab = {name: part+"inspector", icon: null, callback:null};
+
+        //     // if(part == "Eyes") this.eyes_inspector = this.sliders[part+"inspector"];
+            
+        //     // this.sliders[part+"inspector"].addSection(part);
+        //     // this.sliders[part+"inspector"].add("button","", "Add target", { callback: (v) => {
+        //     //     this.global.selection_state = "Add "+part;
+        //     //     let p_idx = this.global.getPartIdx(part);
+        //     //     this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
+        //     // }});
+            
+        //     tab.callback = p => {
+        //         p.addTitle(Part +" morph");
+        //         panel.addButton(null, "Add target avatar", (value, event) => {
+        //             panel.queue( branch.content );
+        //             panel.addButton(null, "Hello");
+        //             panel.clearQueue();
+        //         });
+        //     };            
+        // }
+
+        panel.addText(null, "Widgets below are out the tabs", null, { disabled: true })
+
+
+        panel.addTabs([
+            { 
+                name: "First tab",
+                callback: p => {
+                    p.addTitle("Discord tab");
+                    p.addButton(null, "Connect");
+                }
+            },
+            { 
+                name: "Second tab",
+                icon: null,
+                callback: p => {
+                    p.addTitle("Twitter tab");
+                    p.addText("Tweet", "", null, {placeholder: "Tyler Rake 2"});
+                }
+            },
+            { 
+                name: "Third tab",
+                icon: "fa-brands fa-github",
+                callback: p => {
+                    p.addTitle("Github tab");
+                    p.addButton(null, "Go", () => {window.open("https://github.com/jxarco/lexgui.js/")});
+                }
+            }
+        ]);
+    }
+
+    //fn that manages the avatar selection pop-up menu
+    displayOptionsDialog(avatars, label, used_avatars)
+    {
+        
+    //    // if(used_avatars.length >= (avatars.length -1)) return
+    //     let values = avatars.map(obj => obj.name).sort();
+    //     // Create a new dialog
+    //     let dialog = new LiteGUI.Dialog('Avatar selector', { title:label, close: true, minimize: false, scroll: true, resizable: true, draggable: true });
+    //     this.mainArea.content.appendChild(dialog.root);
+    //     dialog.root.style.height = "110%";
+    //     dialog.root.style.width = "100.3%";
+    //     dialog.root.style.opacity = "90%";
+
+    //     // Create a collection of widgets
+    //     let widgets = new LiteGUI.Inspector();
+    //     for(let i = 0; i < values.length; i++){
+
+    //         if (values[i] == this.global.base_name || used_avatars.includes(values[i]) ) continue;
+    //         widgets.addImageButton(values[i], null, {
+    //             className: "avatarbutt",
+    //             type: "image",
+    //             image: "./data/images/"+values[i].toLowerCase() +".PNG",
+    //             callback: function(v, e) { 
+                    
+    //                 dialog.close();
+    //                 let avatar = avatars[avatars.findIndex(obj => obj.name.includes(values[i]))].model;
+
+    //                 this.global.selection_scheduler(avatar,values[i]);
+
+    //             }.bind(this)
+    //         } )
+    //     }
+    //     widgets.root.id = "avatarcontainer";
+    //     dialog.root.classList.add("grid");
+    //     dialog.add(widgets);
+    //     dialog.show();
     }
 
 

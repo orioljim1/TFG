@@ -157,10 +157,10 @@ class App{
     swap_visibility(){
         
         let element = document.getElementById("mainarea");
-        element.style.display = "block";
+        //element.style.display = "block";
 
         let c = document.getElementById('loading-screen');
-        c.classList.toggle('hidden')
+        //c.classList.toggle('hidden')
        
         this.gui.displayOptionsDialog(this.avatars, "Select base avatar!",[]);
         	
