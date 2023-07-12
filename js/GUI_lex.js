@@ -1,3 +1,4 @@
+
 class GUI {
 
     constructor(global) {
@@ -50,18 +51,18 @@ class GUI {
         // var side_bottom_panel = rbottom.addPanel();
         // fillRightBottomPanel( side_bottom_panel, 'Vertical' );
         this.createMorphTabs(this.sidePanel);
-        this.sidePanel.tab("Another tab");
+        //this.sidePanel.tab("Another tab");
         this.sidePanel.addButton(null, "Click me, Im Full Width...");
         
         const branch = null//this.sidePanel.current_branch;
-        this.sidePanel.tab("tab2");
-        this.sidePanel.addDropdown("Best Engine", ["Godot", "Unity", "Unreal Engine"], "Godot", (value, event) => {
+        //this.sidePanel.tab("tab2");
+        // this.sidePanel.addDropdown("Best Engine", ["Godot", "Unity", "Unreal Engine"], "Godot", (value, event) => {
 
-            this.sidePanel.queuedContainer = branch;
-            this.sidePanel.addButton();
-            delete this.sidePanel.queuedContainer;
-            console.log(value);
-        });
+        //     this.sidePanel.queuedContainer = branch;
+        //     this.sidePanel.addButton();
+        //     delete this.sidePanel.queuedContainer;
+        //     console.log(value);
+        // });
 
         this.sidePanel.merge();
         //console.log(this.sidePanel.branches[0].addButton());
@@ -69,8 +70,6 @@ class GUI {
         //docked.content.id = "main-this.inspector-content";
         //docked.content.style.width = "100%";              
     }
-
-
 
     createMorphTabs(panel){
 
@@ -80,54 +79,98 @@ class GUI {
         panel.branch("Morph", {icon: "fa-solid fa-table-list"});
 
 
-        // let parts = ["Nose", "Chin", "Ears", "Jaw", "Eyes"];
-        // let tabs = {}
+        let parts = ["Nose", "Chin", "Ears", "Jaw", "Eyes"];
+        let tabs = {}
 
-        // for (let index = 0; index < parts.length; index++) {
-        //     const part = parts[index];
-        //     //this.sliders[part+"inspector"] = new LiteGUI.Inspector();
-        //     let tab = {name: part+"inspector", icon: null, callback:null};
+        for (let index = 0; index < parts.length; index++) {
+            const part = parts[index];
+            //this.sliders[part+"inspector"] = new LiteGUI.Inspector();
+            let tab = {name: part+"inspector", icon: null, callback:null};
 
-        //     // if(part == "Eyes") this.eyes_inspector = this.sliders[part+"inspector"];
+            // if(part == "Eyes") this.eyes_inspector = this.sliders[part+"inspector"];
             
-        //     // this.sliders[part+"inspector"].addSection(part);
-        //     // this.sliders[part+"inspector"].add("button","", "Add target", { callback: (v) => {
-        //     //     this.global.selection_state = "Add "+part;
-        //     //     let p_idx = this.global.getPartIdx(part);
-        //     //     this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
-        //     // }});
+            // this.sliders[part+"inspector"].addSection(part);
+            // this.sliders[part+"inspector"].add("button","", "Add target", { callback: (v) => {
+            //     this.global.selection_state = "Add "+part;
+            //     let p_idx = this.global.getPartIdx(part);
+            //     this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
+            // }});
             
-        //     tab.callback = p => {
-        //         p.addTitle(Part +" morph");
-        //         panel.addButton(null, "Add target avatar", (value, event) => {
-        //             panel.queue( branch.content );
-        //             panel.addButton(null, "Hello");
-        //             panel.clearQueue();
-        //         });
-        //     };            
-        // }
+            tab.callback = p => {
+                p.addTitle(Part +" morph");
+                panel.addButton(null, "Add target avatar", (value, event) => {
+                    panel.queue( branch.content );
+                    panel.addButton(null, "Hello");
+                    panel.clearQueue();
+                });
+            };            
+        }
 
         panel.addText(null, "Widgets below are out the tabs", null, { disabled: true })
 
 
         panel.addTabs([
             { 
-                name: "First tab",
-                callback: p => {
-                    p.addTitle("Discord tab");
-                    p.addButton(null, "Connect");
+                name: "Nose morph",
+                callback: (p, content)  => {
+                    const k = p.content;
+                    
+                    let ref= p;
+                    p.addTitle("aaaaaaa");
+                    p.addButton(null, "Add target", function(v, e) { 
+
+                        
+                        //const branch = p.getBranch("Morph");
+                        p.queue(content);
+                        console.log("****",ref);
+                        p.addText("test", "text");
+                        //p.addProgress("Morph influence", 0, { min: 0, max: 1, showValue: true, editable: true, callback: (value, event) => {} });
+                        p.clearQueue();
+
+    
+                    }.bind(this));
+
+
+
+                    // const branch = panel.getBranch("Information");
+                    // panel.queue( branch.content );
+                    // panel.addButton(null, "Hello");
+                    // panel.clearQueue();
+                    
                 }
             },
             { 
-                name: "Second tab",
+                name: "Chin morph",
                 icon: null,
-                callback: p => {
-                    p.addTitle("Twitter tab");
-                    p.addText("Tweet", "", null, {placeholder: "Tyler Rake 2"});
+                callback: (p, content)  => {
+                    const k = p.content;
+                    
+                    let ref= p;
+                    p.addTitle("aaaaaaa");
+                    p.addButton(null, "Add target", function(v, e) { 
+
+                        
+                        //const branch = p.getBranch("Morph");
+                        p.queue(content);
+                        console.log("****",ref);
+                        p.addText("test", "text");
+                        //p.addProgress("Morph influence", 0, { min: 0, max: 1, showValue: true, editable: true, callback: (value, event) => {} });
+                        p.clearQueue();
+
+    
+                    }.bind(this));
+
+
+
+                    // const branch = panel.getBranch("Information");
+                    // panel.queue( branch.content );
+                    // panel.addButton(null, "Hello");
+                    // panel.clearQueue();
+                    
                 }
             },
             { 
-                name: "Third tab",
+                name: "Jaw morph",
                 icon: "fa-brands fa-github",
                 callback: p => {
                     p.addTitle("Github tab");
