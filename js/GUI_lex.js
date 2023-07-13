@@ -157,6 +157,8 @@ class GUI {
     createSkinTab(panel){
 
         panel.addBlank(12);
+        panel.branch("Skin", {icon: "fa-solid fa-table-list"});
+
         let names =['Cleo', 'Jack', 'Eden', 'Jen', 'Sakura', 'Boss']; //temp measure
         let options = [];
         for (let i = 0; i < names.length; i++) {
