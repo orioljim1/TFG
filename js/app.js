@@ -157,10 +157,10 @@ class App{
     //fn to change the loading screen to the app screen
     swap_visibility(){
         
-        let element = document.getElementById("mainarea");
+        //let element = document.getElementById("mainarea");
         //element.style.display = "block";
 
-        let c = document.getElementById('loading-screen');
+        //let c = document.getElementById('loading-screen');
         //c.classList.toggle('hidden')
        
         this.gui.displayOptionsDialog(this.avatars, "Select base avatar!",[]);
@@ -486,7 +486,7 @@ class App{
                 counter ++;
                 //stop loading screen when all models are loaded
                 this.avatars.push({name: keys[i],model: gltf_mesh, mixer: mixer, char_animations: char_animations});
-                if (counter >= 6 ) this.swap_visibility();
+                if (counter >= 5 ) this.swap_visibility();
 
                 
                               
@@ -745,7 +745,7 @@ class App{
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
                 this.blend_scene();
-                this.gui.createMorphInspectors();
+                this.gui.createTools();
                 
                 //arays of avaliable options
                 let s = this.skins.map(item => item.name).sort(function(a, b) {
@@ -768,10 +768,10 @@ class App{
                     }
                 });;;
 
-                this.gui.createSkinWidgets(s);
-                this.gui.createEyesWidgets();
-                this.gui.createHairWidgets(h);
-                this.gui.createExportBtn();
+                // this.gui.createSkinWidgets(s);
+                // this.gui.createEyesWidgets();
+                // this.gui.createHairWidgets(h);
+                // this.gui.createExportBtn();
                 break;
 
             case "blend":
