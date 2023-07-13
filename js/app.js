@@ -34,6 +34,7 @@ class App{
         this.base_name = null;
         this.animations= [];
         this.mixer = null;
+        this.names= null;
 
     }
 
@@ -461,6 +462,7 @@ class App{
         //import assets
         const values = Object.values(routes);
         const keys = Object.keys(routes);
+        this.names = keys;
         //this.avatars = keys;
         this.loader_glb = new GLTFLoader().setPath( './data/models/glb/' );
         

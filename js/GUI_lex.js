@@ -24,9 +24,7 @@ class GUI {
         c.classList.toggle('hidden')
                 
         // Create main area
-        this.mainArea =  LX.init();
-        console.log("thisssss", this.mainArea);
-        
+        this.mainArea =  LX.init();        
         this.mainArea.onresize = window.onresize;
         
         this.createSidePanel()
@@ -39,20 +37,39 @@ class GUI {
 
     createSidePanel() {
         this.mainArea.split({sizes:["75%","25%"]});
-        var [left,right] = this.mainArea.sections;
-        console.log("lefttts", left);
+        let [left,right] = this.mainArea.sections;
         left.root.id = "canvasarea";
-        let docked = right.addPanel("sidePanel", {title: 'Customization tools', scroll: true, height:'100vh'});
+        //let docked = right.addPanel("sidePanel", {title: 'Customization tools', scroll: true, height:'100vh'});
         //right.add(docked);  
-        $(docked).bind("closed", function() { this.mainArea.merge(); });
-        this.sidePanel = docked;
+        //$(docked).bind("closed", function() { this.mainArea.merge(); });
+        //this.sidePanel = docked;
         //this.sidePanel.branch("Morph");
 
         // var side_bottom_panel = rbottom.addPanel();
         // fillRightBottomPanel( side_bottom_panel, 'Vertical' );
-        this.createMorphTabs(this.sidePanel);
+
+        const main_tabs = right.addTabs();
+
+        let morph_panel = new LX.Panel();
+        let hair_panel = new LX.Panel();
+        let skin_panel = new LX.Panel();
+        let eye_color_panel = new LX.Panel();
+        this.createMorphTabs(morph_panel);
+        this.createHairTab(hair_panel);
+        this.createSkinTab(skin_panel);
+        this.createEyeTab(eye_color_panel);
+        main_tabs.add("SKIN", skin_panel);
+        main_tabs.add("HAIR", hair_panel);
+        main_tabs.add( "EYE COLOR", eye_color_panel);
+        main_tabs.add( "MORPH", morph_panel );
+        
+
+        
+        
+
+        //this.createMorphTabs(this.sidePanel);
         //this.sidePanel.tab("Another tab");
-        this.sidePanel.addButton(null, "Click me, Im Full Width...");
+        //this.sidePanel.addButton(null, "Click me, Im Full Width...");
         
         const branch = null//this.sidePanel.current_branch;
         //this.sidePanel.tab("tab2");
@@ -64,7 +81,7 @@ class GUI {
         //     console.log(value);
         // });
 
-        this.sidePanel.merge();
+        //this.sidePanel.merge();
         //console.log(this.sidePanel.branches[0].addButton());
 
         //docked.content.id = "main-this.inspector-content";
@@ -74,13 +91,13 @@ class GUI {
     createMorphTabs(panel){
 
 
-        panel.clear();
+        //panel.clear();
 
         panel.branch("Morph", {icon: "fa-solid fa-table-list"});
 
 
         let parts = ["Nose", "Chin", "Ears", "Jaw", "Eyes"];
-        let tabs = {}
+        let tabs = []
 
         for (let index = 0; index < parts.length; index++) {
             const part = parts[index];
@@ -96,88 +113,77 @@ class GUI {
             //     this.displayOptionsDialog(this.global.avatars,"Select an avatar for the morph of the" + part +":" ,p_idx.names);
             // }});
             
-            tab.callback = p => {
-                p.addTitle(Part +" morph");
-                panel.addButton(null, "Add target avatar", (value, event) => {
-                    panel.queue( branch.content );
-                    panel.addButton(null, "Hello");
-                    panel.clearQueue();
-                });
-            };            
+            tab.callback = (p, content) => {
+                p.addTitle(part +" morph");
+                let k = 0;
+                p.addButton(null, "Add target", function(v, e) {
+                    p.queue(content);
+                    p.addProgress( part + " influence"+ k, 0, { min: 0, max: 1, showValue: true, editable: true, callback: (value, event) => {} });
+                    p.clearQueue();
+                    k++;
+                }.bind(this));
+            };  
+            tabs.push(tab);          
         }
 
         panel.addText(null, "Widgets below are out the tabs", null, { disabled: true })
+        panel.addTabs(tabs);
+    }
 
+    createHairTab(panel){
 
-        panel.addTabs([
-            { 
-                name: "Nose morph",
-                callback: (p, content)  => {
-                    const k = p.content;
-                    
-                    let ref= p;
-                    p.addTitle("aaaaaaa");
-                    p.addButton(null, "Add target", function(v, e) { 
+        panel.branch("Hairs", {icon: "fa-solid fa-table-list"});
 
-                        
-                        //const branch = p.getBranch("Morph");
-                        p.queue(content);
-                        console.log("****",ref);
-                        p.addText("test", "text");
-                        //p.addProgress("Morph influence", 0, { min: 0, max: 1, showValue: true, editable: true, callback: (value, event) => {} });
-                        p.clearQueue();
+        let names =['Cleo', 'Jack', 'Eden', 'Jen', 'Sakura', 'Boss']; //temp measure
+        let options = [];
+        for (let i = 0; i < names.length; i++) {
+            const name = names[i];
+            let option = {value: name, src: "./data/images/"+ name.toLowerCase() +".PNG"}
+            options.push(option);
+        }
 
-    
-                    }.bind(this));
+        panel.addDropdown("Swap hair", options, options[0].value, (value, event) => {
+        
+        console.log("wow");
+        console.log(value);
+        }, {filter:true});
 
+        panel.addColor("Hair color", [1, 1, 1], (value, event) => {
+            console.log("C: ", value);
+        },{useRGB: true});
 
+    }
 
-                    // const branch = panel.getBranch("Information");
-                    // panel.queue( branch.content );
-                    // panel.addButton(null, "Hello");
-                    // panel.clearQueue();
-                    
-                }
-            },
-            { 
-                name: "Chin morph",
-                icon: null,
-                callback: (p, content)  => {
-                    const k = p.content;
-                    
-                    let ref= p;
-                    p.addTitle("aaaaaaa");
-                    p.addButton(null, "Add target", function(v, e) { 
+    createSkinTab(panel){
 
-                        
-                        //const branch = p.getBranch("Morph");
-                        p.queue(content);
-                        console.log("****",ref);
-                        p.addText("test", "text");
-                        //p.addProgress("Morph influence", 0, { min: 0, max: 1, showValue: true, editable: true, callback: (value, event) => {} });
-                        p.clearQueue();
+        panel.addBlank(12);
+        let names =['Cleo', 'Jack', 'Eden', 'Jen', 'Sakura', 'Boss']; //temp measure
+        let options = [];
+        for (let i = 0; i < names.length; i++) {
+            const name = names[i];
+            let option = {value: name, src: "./data/images/"+ name.toLowerCase() +".PNG"}
+            options.push(option);
+        }
 
-    
-                    }.bind(this));
+        panel.addDropdown("Swap skin", options, options[0].value, (value, event) => {
+        
+        console.log("wow");
+        console.log(value);
+        }, {filter:true});
 
+        panel.addColor("Skin color", [1, 1, 1], (value, event) => {
+            console.log("C: ", value);
+        },{useRGB: true});
 
+    }
 
-                    // const branch = panel.getBranch("Information");
-                    // panel.queue( branch.content );
-                    // panel.addButton(null, "Hello");
-                    // panel.clearQueue();
-                    
-                }
-            },
-            { 
-                name: "Jaw morph",
-                icon: "fa-brands fa-github",
-                callback: p => {
-                    p.addTitle("Github tab");
-                    p.addButton(null, "Go", () => {window.open("https://github.com/jxarco/lexgui.js/")});
-                }
-            }
-        ]);
+    createEyeTab(panel){
+
+        panel.addBlank(12);
+        panel.addColor("Eye color", [1, 1, 1], (value, event) => {
+            console.log("C: ", value);
+        },{useRGB: true});
+
     }
 
     //fn that manages the avatar selection pop-up menu
