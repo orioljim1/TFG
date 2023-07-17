@@ -745,7 +745,6 @@ class App{
                 //set scene to have only blend model
                 this.scene.remove(sel_obj);
                 this.blend_scene();
-                this.gui.createTools();
                 
                 //arays of avaliable options
                 let s = this.skins.map(item => item.name).sort(function(a, b) {
@@ -768,6 +767,7 @@ class App{
                     }
                 });;;
 
+                this.gui.createTools(s,h);
                 // this.gui.createSkinWidgets(s);
                 // this.gui.createEyesWidgets();
                 // this.gui.createHairWidgets(h);

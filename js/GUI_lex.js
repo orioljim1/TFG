@@ -44,15 +44,15 @@ class GUI {
     }
 
 
-    createTools(){
+    createTools(s,h){
         const main_tabs = this.side_panel.addTabs();
         let morph_panel = new LX.Panel();
         let hair_panel = new LX.Panel();
         let skin_panel = new LX.Panel();
         let eye_color_panel = new LX.Panel();
         this.createMorphTabs(morph_panel);
-        this.createHairTab(hair_panel);
-        this.createSkinTab(skin_panel);
+        this.createHairTab(hair_panel, h);
+        this.createSkinTab(skin_panel, s);
         this.createEyeTab(eye_color_panel);
         main_tabs.add("SKIN", skin_panel);
         main_tabs.add("HAIR", hair_panel);
@@ -104,11 +104,11 @@ class GUI {
         panel.addTabs(tabs);
     }
 
-    createHairTab(panel){
+    createHairTab(panel, names){
 
         panel.branch("Hairs", {icon: "fa-solid fa-table-list"});
 
-        let names =['Cleo', 'Jack', 'Eden', 'Jen', 'Sakura', 'Boss']; //temp measure
+        
         let options = [];
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
@@ -117,9 +117,7 @@ class GUI {
         }
 
         panel.addDropdown("Swap hair", options, options[0].value, (value, event) => {
-        
-        console.log("wow");
-        console.log(value);
+        this.global.changeHair(value);
         }, {filter:true});
 
         panel.addColor("Hair color", [1, 1, 1], (value, event) => {
@@ -128,12 +126,12 @@ class GUI {
 
     }
 
-    createSkinTab(panel){
+    createSkinTab(panel, names){
 
         panel.addBlank(12);
         panel.branch("Skin", {icon: "fa-solid fa-table-list"});
 
-        let names =['Cleo', 'Jack', 'Eden', 'Jen', 'Sakura', 'Boss']; //temp measure
+        //let names =['Cleo', 'Jack', 'Eden', 'Jen', 'Sakura', 'Boss']; //temp measure
         let options = [];
         for (let i = 0; i < names.length; i++) {
             const name = names[i];
@@ -142,12 +140,10 @@ class GUI {
         }
 
         panel.addDropdown("Swap skin", options, options[0].value, (value, event) => {
-        
-        console.log("wow");
-        console.log(value);
+        this.global.changeSkin(value);
         }, {filter:true});
 
-        panel.addColor("Skin color", [1, 1, 1], (value, event) => {
+        panel.addColor("Skin color", [0.9450980392156862, 0.9294117647058824, 0.9137254901960784], (value, event) => {
             this.global.RGBskin(value);
         },{useRGB: true});
 
@@ -198,7 +194,23 @@ class GUI {
         // dialog.add(widgets);
         // dialog.show();
         let avatar = avatars[avatars.findIndex(obj => obj.name.includes(values[0]))].model;
-        this.global.selection_scheduler(avatar,values[0]);
+        const dialog = new LX.Dialog( "Settings", p => {
+            p.addText("A Text", "Testing first widget");
+            p.sameLine(3);
+            p.addLabel("Buttons:");
+            p.addButton(null, "Click me", () => {
+                console.log( p.getValue("A Text") );
+            });
+            p.addButton(null, "Click me v2!", () => {
+                console.log( p.getValue("A Text") );
+            });
+        }, { modal: true});
+
+       //this.mainArea.sections[0].root.appendChild(dialog.root);
+        dialog.root.style.height = "75%";
+        dialog.root.style.width = "75%";
+        dialog.root.style.opacity = "100%";
+        //this.global.selection_scheduler(avatar,values[0]);
     }
 
 
